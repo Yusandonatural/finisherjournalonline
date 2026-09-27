@@ -61,6 +61,13 @@ async function notion(env: Env, method: string, path: string, body?: unknown): P
   throw new Error('Notion: レート制限が続いています');
 }
 
+/** アプリの URL: 設定があればそれ、なければ実際に開かれた URL */
+async function appUrl(env: Env): Promise<string> {
+  if (env.APP_URL) return env.APP_URL.replace(/\/$/, '');
+  const r = await one(env.DB, "SELECT value FROM sync_state WHERE key = 'app_origin'");
+  return r?.value ?? 'http://localhost:8787';
+}
+
 /** Notion のセレクト名にカンマは使えないので置き換える */
 function optionName(s: string): string {
   return s.replace(/,/g, '、').slice(0, 100);
@@ -129,7 +136,7 @@ async function pushTask(env: Env, task: any) {
     [PROP.status]: { select: { name: STATUS_TO_NOTION[status] } },
     [PROP.checked]: { checkbox: status === 'done' },
     [PROP.content]: { rich_text: content ? [{ text: { content } }] : [] },
-    [PROP.url]: { url: `${env.APP_URL}/day/${task.date}#task-${task.id}` },
+    [PROP.url]: { url: `${await appUrl(env)}/day/${task.date}#task-${task.id}` },
   };
   const wantTags = [env.NOTION_JOURNAL_TAG, ...(goal ? [optionName(goal.title)] : [])];
 

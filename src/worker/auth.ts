@@ -9,6 +9,14 @@ const SESSION_COOKIE = 'fj_session';
 const STATE_COOKIE = 'fj_oauth_state';
 const SESSION_DAYS = 60;
 
+let knownOrigin: string | null = null;
+/** アプリが開かれた URL を覚える（Notion に書くリンクと定期処理で使う） */
+async function rememberOrigin(env: Env, origin: string) {
+  if (knownOrigin === origin || isLocal(origin)) return;
+  knownOrigin = origin;
+  await run(env.DB, "INSERT INTO sync_state (key, value) VALUES ('app_origin', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value", origin);
+}
+
 export const GOOGLE_SCOPES = [
   'openid',
   'email',
@@ -158,5 +166,6 @@ export const requireUser: MiddlewareHandler<AppEnv> = async (c, next) => {
     : null;
   if (!user) throw new HttpError(401, 'ログインしてください');
   c.set('user', user);
+  await rememberOrigin(c.env, new URL(c.req.url).origin);
   await next();
 };

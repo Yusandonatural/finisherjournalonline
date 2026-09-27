@@ -13,8 +13,8 @@ run_worker_first = ["/api/*", "/auth/*"]
 [[d1_databases]]
 binding = "DB"
 database_name = "finisher-journal"
-# `npx wrangler d1 create finisher-journal` で表示された ID に置き換える
-database_id = "00000000-0000-0000-0000-000000000000"
+# 2026-09-28 作成済み（APAC）。テーブルも作成済み
+database_id = "e308539e-720e-43a6-8d25-3012669b1b02"
 migrations_dir = "migrations"
 
 # 15分ごと: 期限切れタスクを「できなかった」に更新し、Notion と同期する
@@ -23,8 +23,8 @@ crons = ["*/15 * * * *"]
 
 [vars]
 APP_TIMEZONE = "Asia/Tokyo"
-# 本番URL（Notion に書くリンクと、定期処理で使う）
-APP_URL = "https://journal.yusando.com"
+# 本番URL（Notion に書くリンクに使う）。空なら、実際に開かれた URL を覚えて使う
+APP_URL = ""
 # 許可するGoogleアカウント（カンマ区切り）
 ALLOWED_EMAILS = "isozaki@yusando.com"
 # 既存の Notion「🎒 Todo リスト」（MY LIFE OS 内）
