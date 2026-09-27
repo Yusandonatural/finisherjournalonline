@@ -1,0 +1,2 @@
+.demo-bar { display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; justify-content: center; padding: 8px 16px; background: var(--gold-soft); border-bottom: 1px solid var(--line); font-size: 13px; color: var(--ink); }
+.demo-actions { display: inline-flex; gap: 6px; }

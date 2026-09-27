@@ -4,6 +4,7 @@ import { ErrorBox, Loading } from '../components/ui';
 import { useApi } from '../hooks';
 
 export function SettingsPage() {
+  const demo = !!(window as any).__FJ_DEMO;
   const me = useApi<any>('/me');
   const notion = useApi<any>('/notion/status');
   const [cals, setCals] = useState<any[] | null>(null);
@@ -48,7 +49,7 @@ export function SettingsPage() {
       <section className="card">
         <h2 className="card-title">アカウント</h2>
         <p>{me.data.user.name} <span className="muted">（{me.data.user.email}）</span></p>
-        <button className="btn" onClick={async () => { await post('/logout'); location.href = '/login'; }}>ログアウト</button>
+        {demo ? <p className="muted small">デモ版のためログアウトはありません。</p> : <button className="btn" onClick={async () => { await post('/logout'); location.href = '/login'; }}>ログアウト</button>}
       </section>
 
       <section className="card">
@@ -75,7 +76,7 @@ export function SettingsPage() {
                 </li>
               ))}
             </ul>
-            <a className="btn btn-small btn-ghost" href="/auth/google">Googleに再接続</a>
+            {!demo && <a className="btn btn-small btn-ghost" href="/auth/google">Googleに再接続</a>}
           </>
         )}
       </section>
@@ -100,7 +101,7 @@ export function SettingsPage() {
           <Loading />
         ) : !notion.data.enabled ? (
           <div className="notice">
-            Notion が未接続です。サーバーに NOTION_TOKEN を設定し、Notion の「MY LIFE OS」ページにインテグレーションを追加してください（README の手順）。
+            {demo ? 'デモ版では Notion 連携は動きません。本番では「🎒 Todo リスト」と同期します。' : <>Notion が未接続です。サーバーに NOTION_TOKEN を設定し、Notion の「MY LIFE OS」ページにインテグレーションを追加してください（README の手順）。</>}
           </div>
         ) : (
           <>
