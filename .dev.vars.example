@@ -1,0 +1,8 @@
+# ローカル開発用（.dev.vars にコピーして使う。コミットしない）
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+# 32バイトのランダム値を base64 で: openssl rand -base64 32
+TOKEN_ENC_KEY=
+NOTION_TOKEN=
+# true にすると /auth/dev で Google なしにログインできる（ローカル専用。本番では絶対に設定しない）
+DEV_LOGIN=true

@@ -1,0 +1,36 @@
+name = "finisher-journal"
+main = "src/worker/index.ts"
+compatibility_date = "2026-09-01"
+compatibility_flags = ["nodejs_compat"]
+
+# フロント（Vite のビルド結果）を同じ Worker から配信する
+[assets]
+directory = "./dist/client"
+binding = "ASSETS"
+not_found_handling = "single-page-application"
+run_worker_first = ["/api/*", "/auth/*"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "finisher-journal"
+# `npx wrangler d1 create finisher-journal` で表示された ID に置き換える
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "migrations"
+
+# 15分ごと: 期限切れタスクを「できなかった」に更新し、Notion と同期する
+[triggers]
+crons = ["*/15 * * * *"]
+
+[vars]
+APP_TIMEZONE = "Asia/Tokyo"
+# 本番URL（Notion に書くリンクと、定期処理で使う）
+APP_URL = "https://journal.yusando.com"
+# 許可するGoogleアカウント（カンマ区切り）
+ALLOWED_EMAILS = "isozaki@yusando.com"
+# 既存の Notion「🎒 Todo リスト」（MY LIFE OS 内）
+NOTION_TASKS_DB_ID = "6ecc0a27e7af4782be9c2b022a75b0e8"
+NOTION_JOURNAL_TAG = "フィニッシャージャーナル"
+NOTION_ASSIGNEE = "礒﨑遼太郎"
+
+# 秘密情報は `npx wrangler secret put <NAME>` で登録する:
+#   GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET / TOKEN_ENC_KEY / NOTION_TOKEN

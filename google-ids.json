@@ -1,0 +1,12 @@
+{
+  "site_name": "Finisher Journal",
+  "site_url": "https://journal.yusando.com",
+  "ga4_measurement_id": "G-9JG1FFTL1B",
+  "ads_conversion_id": "",
+  "ads_conversion_labels": {},
+  "search_console_verification": "",
+  "default_locale": "ja",
+  "locales": ["ja"],
+  "og_image": "https://journal.yusando.com/og.png",
+  "spa": false
+}
