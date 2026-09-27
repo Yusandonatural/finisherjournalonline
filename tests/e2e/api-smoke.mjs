@@ -82,6 +82,30 @@ const cin = await req('GET', `/api/terms/${t2term.id}/carried-in`);
 ok(cin.length === 1 && cin[0].title === '請求書を送る', 'carried-in list on next term');
 await req('POST', `/api/tasks/${t3.id}/to-milestone`, { goal_id: nd.goals.find(g => g.type === 'project').id });
 ok((await req('GET', `/api/terms/${t2term.id}/carried-in`)).length === 0, 'carried item becomes milestone');
+// A. 数値目標
+await req('PATCH', `/api/goals/${g2.id}`, { metric_start: 1000, metric_current: 4000, metric_target: 10000, metric_unit: '人' });
+detail = await req('GET', `/api/terms/${term.id}`);
+ok(detail.goals.find(g => g.id === g2.id).progress === 33, 'numeric target drives progress (1000→4000 of 10000 = 33%)');
+// B. 障害と対策
+await req('PATCH', `/api/goals/${g1.id}`, { obstacle: '物件が見つからない', obstacle_plan: '不動産屋3社に同時に頼む' });
+detail = await req('GET', `/api/terms/${term.id}`);
+ok(detail.goals.find(g => g.id === g1.id).obstacle_plan === '不動産屋3社に同時に頼む', 'obstacle and plan saved');
+// C. 時間があればやること
+const m1 = await req('POST', `/api/days/2026-10-05/tasks`, { title: '本を読む', kind: 'might' });
+await req('POST', `/api/days/2026-10-05/tasks`, { title: '散歩', kind: 'might' });
+day = await req('GET', `/api/days/2026-10-05`);
+ok(day.might.length === 2 && day.tasks.length === 0, 'might-do items are listed separately from the 3 tasks');
+const ledgerBefore = (await req('GET', `/api/terms/${term.id}/tasks`)).stats.total;
+const pastMight = await req('POST', `/api/days/2026-09-10/tasks`, { title: '過去のもしできたら', kind: 'might' });
+day = await req('GET', `/api/days/2026-09-10`);
+ok(day.might[0].status === 'todo', 'past might-do items are not auto-marked missed');
+ok((await req('GET', `/api/terms/${term.id}/tasks`)).stats.total === ledgerBefore, 'might-do items are not counted in the ledger');
+await req('POST', `/api/tasks/${m1.id}/promote`);
+day = await req('GET', `/api/days/2026-10-05`);
+ok(day.tasks.length === 1 && day.tasks[0].title === '本を読む' && day.might.length === 1, 'promote moves a might-do into the 3 tasks');
+await req('POST', `/api/tasks/${m1.id}/demote`);
+day = await req('GET', `/api/days/2026-10-05`);
+ok(day.tasks.length === 0 && day.might.length === 2, 'demote moves it back');
 // notion disabled path
 const ns = await req('GET', '/api/notion/status'); ok(ns.enabled === false, 'notion status when not configured');
 // calendar without google

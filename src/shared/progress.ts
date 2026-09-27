@@ -43,7 +43,26 @@ export function termInfo(term: TermLike, date: string): TermInfo {
   };
 }
 
-export function projectProgress(milestones: { done: number | boolean }[], manual: number | null): number {
+export interface MetricLike {
+  metric_start?: number | null;
+  metric_current?: number | null;
+  metric_target?: number | null;
+}
+
+/** 数値目標の達成率。目標値がなければ null */
+export function metricProgress(m: MetricLike): number | null {
+  if (m.metric_target == null) return null;
+  const start = m.metric_start ?? 0;
+  const cur = m.metric_current ?? start;
+  if (m.metric_target === start) return cur >= m.metric_target ? 100 : 0;
+  const pct = ((cur - start) / (m.metric_target - start)) * 100;
+  return Math.max(0, Math.min(100, Math.round(pct)));
+}
+
+/** プロジェクトの進捗: 数値目標があればそれ、なければマイルストーンの完了率、どちらもなければ手動の値 */
+export function projectProgress(milestones: { done: number | boolean }[], manual: number | null, metric?: MetricLike): number {
+  const m = metric ? metricProgress(metric) : null;
+  if (m != null) return m;
   if (milestones.length === 0) return Math.max(0, Math.min(100, manual ?? 0));
   const done = milestones.filter((m) => !!m.done).length;
   return Math.round((done / milestones.length) * 100);

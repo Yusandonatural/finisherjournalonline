@@ -58,6 +58,15 @@ export function Stat({ label, value, sub, tone }: { label: string; value: ReactN
   );
 }
 
+const fmtNum = (n: number) => (Number.isInteger(n) ? n.toLocaleString('ja-JP') : n.toLocaleString('ja-JP', { maximumFractionDigits: 2 }));
+
+/** 数値目標の「現在 / 目標 単位」。目標値がなければ null */
+export function metricText(g: { metric_target?: number | null; metric_current?: number | null; metric_start?: number | null; metric_unit?: string | null }) {
+  if (g.metric_target == null) return null;
+  const cur = g.metric_current ?? g.metric_start ?? 0;
+  return `${fmtNum(cur)} / ${fmtNum(g.metric_target)}${g.metric_unit ?? ''}`;
+}
+
 export function pct(v: number | null | undefined) {
   return v == null ? '—' : `${v}%`;
 }

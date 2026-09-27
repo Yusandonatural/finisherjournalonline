@@ -5,7 +5,7 @@ import { all, one, ownGoal, ownTask, run } from '../db';
 import { HttpError, type AppEnv } from '../env';
 import { archivePage, notionEnabled, pickFromNotion, pushDirty } from '../notion';
 import { fillRate, goalsWithProgress, groupByGoal, tasksInRange, termForDate, withInfo } from '../stats';
-import { createTask, markMissed, nextPosition } from '../tasks';
+import { createTask, markMissed, nextMightPosition, nextPosition } from '../tasks';
 
 export const dayRoutes = new Hono<AppEnv>();
 
@@ -46,6 +46,7 @@ dayRoutes.get('/days/:date', async (c) => {
       completed: !!entry?.completed,
     },
     tasks,
+    might: await tasksInRange(c.env.DB, u.id, date, date, 'might'),
     goals: term ? await goalsWithProgress(c.env.DB, term, date) : [],
     termStats: taskStats(termTasks),
     notionEnabled: notionEnabled(c.env),
@@ -83,6 +84,11 @@ dayRoutes.post('/days/:date/tasks', async (c) => {
   const title = str(b.title, 300).trim();
   if (!title) throw new HttpError(400, 'タスクを入れてください');
   if (b.goal_id) await ownGoal(c.env.DB, u.id, b.goal_id);
+  if (b.kind === 'might') {
+    const n = await one(c.env.DB, "SELECT COUNT(*) AS n FROM tasks WHERE user_id = ? AND date = ? AND kind = 'might'", u.id, date);
+    if ((n?.n ?? 0) >= 10) throw new HttpError(400, '「時間があればやること」は10個までです');
+    return c.json(await createTask(c.env, u.id, { date, title, kind: 'might', goal_id: b.goal_id ?? null }));
+  }
   let position = await nextPosition(c.env.DB, u.id, date, true);
   if (position === null) throw new HttpError(400, 'やるべきことは1日3つまでです');
   if ([1, 2, 3].includes(b.position)) {
@@ -114,13 +120,13 @@ dayRoutes.patch('/tasks/:id', async (c) => {
     f.goal_id = b.goal_id || null;
   }
   if ('status' in b && ['todo', 'done', 'missed', 'dropped'].includes(b.status)) {
-    f.status = b.status === 'todo' && t.date < todayJST() ? 'missed' : b.status;
+    f.status = b.status === 'todo' && t.date < todayJST() && t.kind === 'must' ? 'missed' : b.status;
     f.done_at = b.status === 'done' ? new Date().toISOString() : null;
   }
   if ('carry_over' in b) f.carry_over = b.carry_over ? 1 : 0;
   const keys = Object.keys(f);
   if (keys.length) {
-    const dirty = keys.some((k) => ['title', 'goal_id', 'status'].includes(k)) ? 1 : t.notion_dirty;
+    const dirty = t.kind === 'must' && keys.some((k) => ['title', 'goal_id', 'status'].includes(k)) ? 1 : t.notion_dirty;
     await run(
       c.env.DB,
       `UPDATE tasks SET ${keys.map((k) => `${k} = ?`).join(', ')}, notion_dirty = ?, updated_at = datetime('now') WHERE id = ?`,
@@ -147,6 +153,7 @@ dayRoutes.post('/tasks/:id/carry', async (c) => {
   if (!['todo', 'missed'].includes(t.status)) throw new HttpError(400, 'このタスクは送れません');
   const created = await createTask(c.env, u.id, {
     date,
+    kind: t.kind,
     title: t.title,
     goal_id: t.goal_id,
     carried_from_id: t.id,
@@ -157,6 +164,31 @@ dayRoutes.post('/tasks/:id/carry', async (c) => {
   await run(c.env.DB, "UPDATE tasks SET status = 'carried', notion_page_id = NULL, notion_dirty = 0, updated_at = datetime('now') WHERE id = ?", t.id);
   syncLater(c);
   return c.json(created);
+});
+
+/** 「時間があればやること」を「やるべきこと」に上げる（空き枠があるときだけ） */
+dayRoutes.post('/tasks/:id/promote', async (c) => {
+  const u = c.get('user');
+  const t = await ownTask(c.env.DB, u.id, c.req.param('id'));
+  if (t.kind !== 'might') throw new HttpError(400, 'すでに「やるべきこと」です');
+  const pos = await nextPosition(c.env.DB, u.id, t.date, true);
+  if (pos === null) throw new HttpError(400, 'やるべきことは1日3つまでです。先に1つ終えるか送ってください');
+  await run(c.env.DB, "UPDATE tasks SET kind = 'must', position = ?, notion_dirty = 1, updated_at = datetime('now') WHERE id = ?", pos, t.id);
+  syncLater(c);
+  return c.json(await one(c.env.DB, 'SELECT * FROM tasks WHERE id = ?', t.id));
+});
+
+/** 「やるべきこと」を「時間があればやること」に下げる */
+dayRoutes.post('/tasks/:id/demote', async (c) => {
+  const u = c.get('user');
+  const t = await ownTask(c.env.DB, u.id, c.req.param('id'));
+  if (t.kind !== 'must' || t.status !== 'todo') throw new HttpError(400, '未着手の「やるべきこと」だけ下げられます');
+  await run(c.env.DB, "UPDATE tasks SET kind = 'might', position = ?, updated_at = datetime('now') WHERE id = ?", await nextMightPosition(c.env.DB, u.id, t.date), t.id);
+  if (t.notion_page_id) {
+    await run(c.env.DB, 'UPDATE tasks SET notion_page_id = NULL WHERE id = ?', t.id);
+    c.executionCtx.waitUntil(archivePage(c.env, t.notion_page_id));
+  }
+  return c.json({ ok: true });
 });
 
 // ---- 週間・月間（予定とレビュー） ----

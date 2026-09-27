@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { shortDate } from '../../shared/dates';
 import { del, patch, post } from '../api';
 import { TermHeader } from '../components/TermHeader';
-import { ErrorBox, Loading, Progress } from '../components/ui';
+import { ErrorBox, Loading, Progress, metricText } from '../components/ui';
 import { useApi } from '../hooks';
 
 const WD = ['日', '月', '火', '水', '木', '金', '土'];
@@ -93,7 +93,17 @@ function AddGoal({ termId, type, onAdded }: { termId: string; type: 'project' | 
 
 function GoalEditor({ goal, first, last, onChange }: { goal: any; first: boolean; last: boolean; onChange: () => void }) {
   const [open, setOpen] = useState(false);
-  const [f, setF] = useState({ title: goal.title, why: goal.why ?? '' });
+  const [f, setF] = useState({
+    title: goal.title,
+    why: goal.why ?? '',
+    obstacle: goal.obstacle ?? '',
+    obstacle_plan: goal.obstacle_plan ?? '',
+    metric_unit: goal.metric_unit ?? '',
+    metric_start: goal.metric_start ?? '',
+    metric_current: goal.metric_current ?? '',
+    metric_target: goal.metric_target ?? '',
+  });
+  const blurSave = (k: keyof typeof f) => () => String(f[k]) !== String(goal[k] ?? '') && save({ [k]: f[k] });
   const [ms, setMs] = useState('');
   const weekdays: number[] = JSON.parse(goal.habit_weekdays_json || '[]');
   const save = async (p: Record<string, unknown>) => {
@@ -117,6 +127,12 @@ function GoalEditor({ goal, first, last, onChange }: { goal: any; first: boolean
         <button className="btn btn-small btn-ghost" onClick={() => setOpen(!open)} aria-expanded={open}>{open ? '閉じる' : '詳細'}</button>
       </div>
       <Progress value={goal.progress} tone={goal.behind ? 'warn' : undefined} />
+      {(metricText(goal) || goal.obstacle) && (
+        <p className="muted small goal-sub">
+          {metricText(goal) && <span>数値目標 {metricText(goal)}</span>}
+          {goal.obstacle && <span>障害: {goal.obstacle}</span>}
+        </p>
+      )}
 
       {goal.type === 'project' && (
         <ul className="check-list">
@@ -144,13 +160,44 @@ function GoalEditor({ goal, first, last, onChange }: { goal: any; first: boolean
             なぜやるか
             <input value={f.why} onChange={(e) => setF({ ...f, why: e.target.value })} onBlur={() => f.why !== (goal.why ?? '') && save({ why: f.why })} placeholder="動機をひとこと" />
           </label>
+          {goal.type === 'project' && (
+            <fieldset>
+              <legend>数値目標（入れると進捗はこの数字で計算します）</legend>
+              <div className="form-row">
+                <label>
+                  開始値
+                  <input type="number" inputMode="decimal" value={f.metric_start} onChange={(e) => setF({ ...f, metric_start: e.target.value })} onBlur={blurSave('metric_start')} />
+                </label>
+                <label>
+                  現在値
+                  <input type="number" inputMode="decimal" value={f.metric_current} onChange={(e) => setF({ ...f, metric_current: e.target.value })} onBlur={blurSave('metric_current')} />
+                </label>
+                <label>
+                  目標値
+                  <input type="number" inputMode="decimal" value={f.metric_target} onChange={(e) => setF({ ...f, metric_target: e.target.value })} onBlur={blurSave('metric_target')} />
+                </label>
+                <label>
+                  単位
+                  <input value={f.metric_unit} placeholder="件・万円・人" onChange={(e) => setF({ ...f, metric_unit: e.target.value })} onBlur={blurSave('metric_unit')} />
+                </label>
+              </div>
+            </fieldset>
+          )}
+          <label>
+            大きな障害（うまくいかなくなるとしたら何が原因か）
+            <textarea rows={2} value={f.obstacle} onChange={(e) => setF({ ...f, obstacle: e.target.value })} onBlur={blurSave('obstacle')} />
+          </label>
+          <label>
+            障害への対策
+            <textarea rows={2} value={f.obstacle_plan} onChange={(e) => setF({ ...f, obstacle_plan: e.target.value })} onBlur={blurSave('obstacle_plan')} />
+          </label>
           {goal.type === 'project' ? (
             <div className="form-row">
               <label>
                 期限
                 <input type="date" value={goal.due_date ?? ''} onChange={(e) => save({ due_date: e.target.value || null })} />
               </label>
-              {goal.milestones.length === 0 && (
+              {goal.milestones.length === 0 && goal.metric_target == null && (
                 <label>
                   進捗（手動） {goal.manual_progress ?? 0}%
                   <input type="range" min={0} max={100} step={5} defaultValue={goal.manual_progress ?? 0} onMouseUp={(e) => save({ manual_progress: Number((e.target as HTMLInputElement).value) })} onTouchEnd={(e) => save({ manual_progress: Number((e.target as HTMLInputElement).value) })} />

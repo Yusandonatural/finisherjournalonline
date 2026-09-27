@@ -32,14 +32,14 @@ export async function goalsWithProgress(db: D1Database, term: any, onDate?: stri
   );
   const taskCounts = await all(
     db,
-    `SELECT goal_id, status, COUNT(*) AS n FROM tasks WHERE goal_id IN (SELECT id FROM goals WHERE term_id = ?) GROUP BY goal_id, status`,
+    `SELECT goal_id, status, COUNT(*) AS n FROM tasks WHERE kind = 'must' AND goal_id IN (SELECT id FROM goals WHERE term_id = ?) GROUP BY goal_id, status`,
     term.id,
   );
   return goals.map((g) => {
     const ms = milestones.filter((m) => m.goal_id === g.id);
     const dates = new Set(logs.filter((l) => l.goal_id === g.id).map((l) => l.date as string));
     const habit = g.type === 'habit' ? habitStats(g, dates, term.start_date, until) : null;
-    const progress = g.type === 'project' ? projectProgress(ms, g.manual_progress) : habit!.pct;
+    const progress = g.type === 'project' ? projectProgress(ms, g.manual_progress, g) : habit!.pct;
     const tc = taskCounts.filter((t) => t.goal_id === g.id);
     const tasks = taskStats(tc.flatMap((t) => Array(t.n).fill({ status: t.status })));
     return {
@@ -56,12 +56,13 @@ export async function goalsWithProgress(db: D1Database, term: any, onDate?: stri
   });
 }
 
-export async function tasksInRange(db: D1Database, userId: string, from: string, to: string) {
+/** 期間のタスク。既定は「やるべきこと」だけ（「時間があればやること」は集計に入れない） */
+export async function tasksInRange(db: D1Database, userId: string, from: string, to: string, kind: 'must' | 'might' = 'must') {
   return all(
     db,
     `SELECT t.*, g.title AS goal_title FROM tasks t LEFT JOIN goals g ON g.id = t.goal_id
-     WHERE t.user_id = ? AND t.date BETWEEN ? AND ? ORDER BY t.date, t.position`,
-    userId, from, to,
+     WHERE t.user_id = ? AND t.kind = ? AND t.date BETWEEN ? AND ? ORDER BY t.date, t.position`,
+    userId, kind, from, to,
   );
 }
 

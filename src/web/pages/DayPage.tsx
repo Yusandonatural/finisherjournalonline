@@ -5,7 +5,7 @@ import { put } from '../api';
 import { CalendarError, EventLine, EventModal, eventsOn, useEvents, type CalEvent } from '../components/calendar';
 import { GoalPanel } from '../components/GoalPanel';
 import { NotionPicker } from '../components/NotionPicker';
-import { EmptyTaskSlot, TaskRow, type Task } from '../components/TaskRow';
+import { EmptyTaskSlot, MightList, TaskRow, type Task } from '../components/TaskRow';
 import { ErrorBox, Loading, SaveBadge, pct } from '../components/ui';
 import { useApi, useAutosave, useLocalFlag } from '../hooks';
 
@@ -146,6 +146,14 @@ function DayView({ date }: { date: string }) {
                 <Link to={`/term/${term.id}/tasks`}>台帳を見る</Link>
               </p>
             )}
+          </section>
+
+          <section className="card">
+            <div className="card-head">
+              <h2 className="card-title">時間があればやること</h2>
+              <span className="muted small">できなくても「できなかった」にはなりません</span>
+            </div>
+            <MightList date={date} today={today} tasks={data.might ?? []} onChange={reload} />
           </section>
 
           <section className="card">

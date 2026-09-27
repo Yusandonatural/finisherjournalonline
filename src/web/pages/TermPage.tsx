@@ -2,7 +2,7 @@ import { Link, useParams } from 'react-router-dom';
 import { addDays, daysInRange, mondayOf, shortDate, todayJST, weekday } from '../../shared/dates';
 import { habitLabel, habitScheduled } from '../../shared/progress';
 import { TermHeader } from '../components/TermHeader';
-import { ErrorBox, Loading, Progress, Stat, pct } from '../components/ui';
+import { ErrorBox, Loading, Progress, Stat, metricText, pct } from '../components/ui';
 import { useApi } from '../hooks';
 
 export function TermPage() {
@@ -67,10 +67,17 @@ export function TermPage() {
               </div>
               <Progress value={g.progress} tone={g.behind ? 'warn' : undefined} />
               <p className="muted small">
+                {metricText(g) && <>数値目標 {metricText(g)} ・ </>}
                 マイルストーン {g.milestones.filter((m: any) => m.done).length} / {g.milestones.length}
                 {g.tasks.total > 0 && ` ・ 関連タスク できた ${g.tasks.done} / ${g.tasks.total}`}
                 {g.due_date && ` ・ 期限 ${shortDate(g.due_date)}`}
               </p>
+              {g.obstacle && (
+                <p className="obstacle small">
+                  <strong>障害:</strong> {g.obstacle}
+                  {g.obstacle_plan && <> → <strong>対策:</strong> {g.obstacle_plan}</>}
+                </p>
+              )}
             </li>
           ))}
         </ul>

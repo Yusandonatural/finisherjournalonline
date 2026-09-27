@@ -157,7 +157,7 @@ export async function pushDirty(env: Env, limit = 30) {
   if (!notionEnabled(env)) return { pushed: 0, errors: 0 };
   const tasks = await all(
     env.DB,
-    "SELECT * FROM tasks WHERE notion_dirty = 1 AND title != '' AND (notion_page_id IS NOT NULL OR status NOT IN ('dropped', 'carried')) ORDER BY updated_at LIMIT ?",
+    "SELECT * FROM tasks WHERE notion_dirty = 1 AND kind = 'must' AND title != '' AND (notion_page_id IS NOT NULL OR status NOT IN ('dropped', 'carried')) ORDER BY updated_at LIMIT ?",
     limit,
   );
   let pushed = 0;
@@ -302,7 +302,7 @@ export async function pickFromNotion(env: Env, userId: string, pageId: string, d
 
 export async function status(env: Env) {
   const last = await one(env.DB, "SELECT value FROM sync_state WHERE key = 'notion_last_pull'");
-  const dirty = await one(env.DB, "SELECT COUNT(*) AS n FROM tasks WHERE notion_dirty = 1 AND title != '' AND (notion_page_id IS NOT NULL OR status NOT IN ('dropped', 'carried'))");
+  const dirty = await one(env.DB, "SELECT COUNT(*) AS n FROM tasks WHERE notion_dirty = 1 AND kind = 'must' AND title != '' AND (notion_page_id IS NOT NULL OR status NOT IN ('dropped', 'carried'))");
   const errors = await one(env.DB, 'SELECT COUNT(*) AS n FROM tasks WHERE notion_error IS NOT NULL');
   const logs = await all(env.DB, 'SELECT * FROM notion_sync_log ORDER BY id DESC LIMIT 20');
   return {

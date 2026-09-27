@@ -4,7 +4,7 @@ import { shortDate, WEEKDAYS_JA, weekday } from '../../shared/dates';
 import { put } from '../api';
 import { useAutosave } from '../hooks';
 import { StatusChip, TaskActions, type Task } from './TaskRow';
-import { Progress, SaveBadge, Stars, Stat, pct } from './ui';
+import { Progress, SaveBadge, Stars, Stat, metricText, pct } from './ui';
 
 export interface Note {
   theme: string;
@@ -181,7 +181,7 @@ export function GoalProgressList({ goals }: { goals: any[] }) {
     <ul className="goal-progress">
       {goals.map((g) => (
         <li key={g.id}>
-          <div className="row"><span>{g.title}</span><span className="num">{g.progress}%</span></div>
+          <div className="row"><span>{g.title}{metricText(g) && <span className="muted small">（{metricText(g)}）</span>}</span><span className="num">{g.progress}%</span></div>
           <Progress value={g.progress} tone={g.behind ? 'warn' : undefined} />
         </li>
       ))}

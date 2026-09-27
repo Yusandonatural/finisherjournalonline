@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { addDays, defaultTermFor, isDate, mondayOf, monthEnd, quarterOf, termTitle, todayJST } from './dates';
-import { habitStats, isBehind, projectProgress, taskStats, termInfo } from './progress';
+import { habitStats, isBehind, metricProgress, projectProgress, taskStats, termInfo } from './progress';
 
 const term = { start_date: '2026-10-01', end_date: '2026-12-31' };
 
@@ -42,6 +42,13 @@ describe('termInfo', () => {
 describe('projectProgress', () => {
   it('マイルストーンの完了率', () => {
     expect(projectProgress([{ done: 1 }, { done: 0 }, { done: 1 }, { done: 0 }], null)).toBe(50);
+  });
+  it('数値目標があればそれを優先する', () => {
+    expect(projectProgress([{ done: 1 }, { done: 0 }], null, { metric_start: 0, metric_current: 1, metric_target: 3 })).toBe(33);
+    expect(metricProgress({ metric_start: 1000, metric_current: 4000, metric_target: 10000 })).toBe(33);
+    expect(metricProgress({ metric_start: 0, metric_current: 5, metric_target: 3 })).toBe(100);
+    expect(metricProgress({ metric_start: 80, metric_current: 75, metric_target: 70 })).toBe(50); // 減らす目標
+    expect(metricProgress({ metric_target: null })).toBe(null);
   });
   it('マイルストーンがなければ手動の値', () => {
     expect(projectProgress([], 35)).toBe(35);

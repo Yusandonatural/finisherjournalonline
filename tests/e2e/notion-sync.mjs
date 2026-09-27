@@ -95,6 +95,14 @@ await req('DELETE', `/api/tasks/${moved.id}`);
 await sleep(1500);
 ok((await page(created.id)).archived === true, 'deleting a task archives the Notion row');
 
+// 時間があればやることは Notion に送らない。上げたら送る
+const mt = await req('POST', '/api/days/2026-10-06/tasks', { title: 'もしできたら読書', kind: 'might' });
+await req('POST', '/api/notion/sync');
+ok(!(await mock('/_pages')).some((p) => props(p).title === 'もしできたら読書'), 'might-do items are not sent to Notion');
+await req('POST', `/api/tasks/${mt.id}/promote`);
+await sleep(1500);
+ok((await mock('/_pages')).some((p) => props(p).title === 'もしできたら読書'), 'promoted item is sent to Notion');
+
 // 触ってはいけない行
 ok(props(await page(Bp)).tags.length === 0 && props(await page(Bp)).status === '今週の対応事項', 'untagged rows are never modified');
 st = await req('GET', '/api/notion/status');

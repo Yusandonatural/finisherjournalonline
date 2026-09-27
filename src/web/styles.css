@@ -418,3 +418,15 @@ h1, h2, h3 { margin: 0; line-height: 1.4; }
 .picker-list li button:hover { border-color: var(--accent); }
 .picker-title { font-weight: 600; }
 .picker-meta .chip:first-child { margin-left: 0; }
+
+/* 数値目標・障害・時間があればやること */
+.goal-metric { margin: 4px 0 0; font-size: 12px; color: var(--gold); font-weight: 700; font-variant-numeric: tabular-nums; }
+.goal-sub { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 6px 0 0; }
+.obstacle { margin: 6px 0 0; padding: 6px 10px; border-left: 3px solid var(--warn); background: var(--warn-soft); border-radius: 0 8px 8px 0; color: var(--ink); }
+.obstacle strong { color: var(--warn); }
+.metric-update { display: flex; align-items: center; gap: 4px; margin: 6px 0; }
+.metric-update input { width: 6em; padding: 3px 6px; text-align: right; }
+.might-list { list-style: none; margin: 0; padding: 0; }
+.might-list li { padding: 3px 0; }
+.might-list li.dropped span { color: var(--muted); }
+.might .add-row { margin-top: 6px; }

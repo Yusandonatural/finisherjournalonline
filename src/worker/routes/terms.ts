@@ -56,9 +56,11 @@ termRoutes.post('/terms', async (c) => {
     const nid = uid();
     await run(
       c.env.DB,
-      `INSERT INTO goals (id, term_id, type, title, why, sort_order, manual_progress, habit_frequency, habit_times_per_week, habit_weekdays_json)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO goals (id, term_id, type, title, why, sort_order, manual_progress, habit_frequency, habit_times_per_week, habit_weekdays_json,
+         metric_unit, metric_start, metric_current, metric_target, obstacle, obstacle_plan)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       nid, id, g.type, g.title, g.why, order++, g.manual_progress, g.habit_frequency, g.habit_times_per_week, g.habit_weekdays_json,
+      g.metric_unit, g.metric_current ?? g.metric_start, g.metric_current ?? g.metric_start, g.metric_target, g.obstacle, g.obstacle_plan,
     );
     const ms = await all(c.env.DB, 'SELECT * FROM milestones WHERE goal_id = ? AND done = 0 ORDER BY sort_order', g.id);
     for (const [i, m] of ms.entries()) {
@@ -108,6 +110,11 @@ function goalFields(b: any) {
   if ('status' in b && ['active', 'achieved', 'missed', 'cancelled'].includes(b.status)) f.status = b.status;
   if ('habit_frequency' in b && ['daily', 'weekly', 'weekdays'].includes(b.habit_frequency)) f.habit_frequency = b.habit_frequency;
   if ('habit_times_per_week' in b) f.habit_times_per_week = Math.max(1, Math.min(7, Number(b.habit_times_per_week) || 1));
+  const num = (v: unknown) => (v === '' || v == null || !Number.isFinite(Number(v)) ? null : Number(v));
+  if ('metric_unit' in b) f.metric_unit = str(b.metric_unit, 20);
+  for (const k of ['metric_start', 'metric_current', 'metric_target']) if (k in b) f[k] = num(b[k]);
+  if ('obstacle' in b) f.obstacle = str(b.obstacle, 1000);
+  if ('obstacle_plan' in b) f.obstacle_plan = str(b.obstacle_plan, 1000);
   if ('habit_weekdays' in b && Array.isArray(b.habit_weekdays)) f.habit_weekdays_json = JSON.stringify(b.habit_weekdays.filter((n: any) => Number.isInteger(n) && n >= 0 && n <= 6));
   return f;
 }

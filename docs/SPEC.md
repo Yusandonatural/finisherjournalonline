@@ -1,6 +1,6 @@
 # フィニッシャージャーナル Web版 仕様書
 
-- 版: v0.4（週間・月間の予定とレビュー、タブ切り替えを追加。実装に合わせて更新）
+- 版: v0.5（紙版に合わせて、数値目標・大きな障害と対策・時間があればやることを追加）
 - 作成日: 2026-09-27
 - 対象: 紙の「フィニッシャージャーナル」（90日ジャーナル）をWebアプリ化する
 - ステータス: **実装済み（フェーズ1）**。2026-09-27 に方向性OK、確認事項は提案どおりで確定。残るのはドメインのみ（11章）
@@ -78,8 +78,10 @@
 | タイトル | 例「新茶の卸先を3件増やす」 |
 | なぜやるか（任意） | 動機の一言。デイリーページのツールチップに出す |
 | 期限 | 既定はターム終了日。前倒しも可 |
+| 数値目標（任意） | 開始値・現在値・目標値・単位。入っていれば進捗 =（現在値−開始値）÷（目標値−開始値）。減らす目標にも対応 |
+| 大きな障害と対策（任意） | うまくいかなくなるとしたら何が原因か、とその対策。習慣目標にも付けられる |
 | マイルストーン | 小タスクのリスト（3〜10個程度）。チェックで完了 |
-| 進捗 | 完了マイルストーン数 ÷ 全マイルストーン数（%）。マイルストーン0件のときは手動の％スライダー |
+| 進捗 | 数値目標があればその達成率。なければ完了マイルストーン数 ÷ 全マイルストーン数（%）。どちらもなければ手動の％スライダー |
 | 状態 | 進行中／達成／未達／中止 |
 
 - 目標数の目安は 3〜5個。上限は設けないが、6個以上で注意表示を出す。
@@ -156,9 +158,10 @@ URL: `/day/2026-10-01` のように日付で1ページ。今日のページが�
    - 日付が変わっても未完了のタスクは自動で「できなかった」になる（台帳に積み上がる）。過去日のページでは「できなかった」に取り消し線を付け、その場で「できた」に直すことも可能
    - 保存と同時に Notion の「Todo リスト」へ同期される（7.5節）
    - 「Notionから選ぶ」ボタンで、Todo リストに溜まっている Inbox／今週の対応事項などから今日の3つに引き込める
-5. **今日、集中すべきこと**: 1行テキスト（1つだけ）
-6. **良かったこと**: 3行（1行ずつの入力欄。3つ埋まると小さな祝福アニメ）
-7. **メモ**（自由記述）
+5. **時間があればやること**（Might Do）: 最大10個。チェックで完了。できなくても「できなかった」にならず、台帳の集計・Notion 同期の対象外。メニューから「やるべきことに上げる」（空き枠があるとき）、逆に未着手のやるべきことは「時間があれば」に下げられる
+6. **今日、集中すべきこと**: 1行テキスト（1つだけ）
+7. **良かったこと**: 3行（1行ずつの入力欄。3つ埋まると小さな祝福アニメ）
+8. **メモ**（自由記述）
 8. フッター: 「今日の記入を完了」ボタン（記入済みフラグ。ダッシュボードの記入率に使う）
 
 ### 6.2 保存
@@ -313,12 +316,13 @@ user_settings    (user_id, calendar_ids_json, missed_cutoff 'midnight'|'noon')
 
 terms            (id, user_id, title, start_date, end_date, created_at)
 goals            (id, term_id, type 'project'|'habit', title, why, sort_order, due_date, manual_progress, status,
-                  habit_frequency 'daily'|'weekly'|'weekdays', habit_times_per_week, habit_weekdays_json)
+                  habit_frequency 'daily'|'weekly'|'weekdays', habit_times_per_week, habit_weekdays_json,
+                  metric_unit, metric_start, metric_current, metric_target, obstacle, obstacle_plan)
 milestones       (id, goal_id, title, done, done_at, sort_order)
 habit_logs       (goal_id, date, done)                       -- 主キー (goal_id, date)
 
 daily_entries    (id, user_id, date, focus, memo, goods_json, completed, created_at, updated_at)  -- (user_id, date) 一意
-tasks            (id, user_id, date, position, title,       -- position 1〜3 が本枠、4 以上は Notion から入った別枠
+tasks            (id, user_id, date, position, title, kind 'must'|'might',  -- must の position 1〜3 が本枠、4 以上は Notion から入った別枠
                   status 'todo'|'done'|'missed'|'carried'|'dropped', done_at,
                   goal_id, carried_from_id, carry_count, carry_over,
                   source 'app'|'notion', notion_page_id, notion_synced_at, notion_dirty, notion_error, notion_snapshot)
@@ -345,6 +349,7 @@ sync_state       (key, value)                                -- Notion 取り込
 | GET | `/api/terms/current?date=` | その日のターム |
 | GET | `/api/terms/:id/carried-in` | 前タームから持ち越したタスク |
 | POST | `/api/tasks/:id/to-milestone` | 持ち越したタスクをマイルストーンにする |
+| POST | `/api/tasks/:id/promote`、`/api/tasks/:id/demote` | 時間があればやること ⇄ やるべきこと |
 | GET/PUT | `/api/me`、`/api/settings` | ログイン中のユーザー、設定 |
 | GET | `/api/terms/:id/tasks?status=&goal_id=` | タスク台帳（集計を含む） |
 | POST | `/api/tasks/:id/carry` | 翌日（または指定日）へ送る |
@@ -414,13 +419,13 @@ sync_state       (key, value)                                -- Notion 取り込
 | 紙版の要素 | アプリでの対応 | 状態 |
 |---|---|---|
 | 四半期（90日）の目標設定 | ターム（3ヶ月）とプロジェクト目標・習慣目標 | 対応済み |
-| 目標は期限と数字で測れるように | 期限は入力できる。数値目標（現在値／目標値）の欄はない | 未対応（候補 A） |
+| 目標は期限と数字で測れるように | 数値目標（開始値・現在値・目標値・単位）。入れると進捗はこの数字で計算し、今日のページで現在値を＋−で更新できる | 対応済み（v0.5） |
 | 行動計画（Action Plan） | プロジェクト目標のマイルストーン | 対応済み |
-| 大きな障害（Big Obstacle）と対策 | 欄がない | 未対応（候補 B） |
+| 大きな障害（Big Obstacle）と対策 | 目標ごとの「大きな障害」「障害への対策」。今日のページの目標パネルと3ヶ月の進捗に表示 | 対応済み（v0.5） |
 | 週の約束（weekly commitments） | 週間予定の「週の目標」 | 対応済み |
 | 週のスコアボード | 週間レビューの達成率・前週比・習慣の表 | 対応済み |
 | 日の優先3つ（Must Do） | 今日やるべきこと3つ | 対応済み |
-| できればやること（Might Do） | 欄がない（3つ以外は Notion 側で管理） | 未対応（候補 C） |
+| できればやること（Might Do） | 今日のページの「時間があればやること」（最大10個）。できなくても「できなかった」にならず、台帳の集計にも Notion にも入れない。「やるべきことに上げる」と3つの枠へ移り Notion に送る | 対応済み（v0.5） |
 | 時間の割り当て（タイムボックス） | Googleカレンダーの予定を直接追加・編集 | 対応済み |
 | 振り返りと改善 | 週間・月間レビュー、ターム総括 | 対応済み |
 | 良かったこと・集中すべきこと | デイリーページの欄 | 対応済み（本人の使い方に合わせた） |

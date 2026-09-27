@@ -9,6 +9,7 @@ export interface Task {
   position: number;
   title: string;
   status: TaskStatus;
+  kind?: 'must' | 'might';
   goal_id: string | null;
   goal_title?: string | null;
   carry_count: number;
@@ -52,8 +53,14 @@ export function TaskActions({ task, today, onChange }: { task: Task; today: stri
               {task.date >= today ? '翌日へ送る' : `明日（${shortDate(tomorrow)}）に送る`}
             </button>
           )}
+          {task.kind === 'might' && task.status === 'todo' && (
+            <button role="menuitem" onClick={() => act(() => post(`/tasks/${task.id}/promote`))}>やるべきことに上げる</button>
+          )}
+          {task.kind !== 'might' && task.status === 'todo' && task.date >= today && (
+            <button role="menuitem" onClick={() => act(() => post(`/tasks/${task.id}/demote`))}>「時間があれば」に下げる</button>
+          )}
           {task.status === 'done' && <button role="menuitem" onClick={() => act(() => patch(`/tasks/${task.id}`, { status: 'todo' }))}>未完了に戻す</button>}
-          {task.status !== 'missed' && task.status !== 'done' && task.date < today && (
+          {task.kind !== 'might' && task.status !== 'missed' && task.status !== 'done' && task.date < today && (
             <button role="menuitem" onClick={() => act(() => patch(`/tasks/${task.id}`, { status: 'missed' }))}>できなかった</button>
           )}
           {task.status !== 'dropped' && task.status !== 'carried' && (
@@ -87,7 +94,7 @@ export function TaskRow({ task, today, goals, onChange }: { task: Task; today: s
   }
 
   async function toggle() {
-    const next: TaskStatus = status === 'done' ? (task.date < today ? 'missed' : 'todo') : 'done';
+    const next: TaskStatus = status === 'done' ? (task.date < today && task.kind !== 'might' ? 'missed' : 'todo') : 'done';
     setStatus(next); // 押した瞬間に反映し、保存は裏で行う
     try {
       await patch(`/tasks/${task.id}`, { status: next });
@@ -178,5 +185,64 @@ export function EmptyTaskSlot({ date, position, goals, onCreated }: { date: stri
         )}
       </div>
     </div>
+  );
+}
+
+/** 時間があればやること（Might Do）。できなくても「できなかった」にはならない */
+export function MightList({ date, today, tasks, onChange }: { date: string; today: string; tasks: Task[]; onChange: () => void }) {
+  const [title, setTitle] = useState('');
+  const [busy, setBusy] = useState(false);
+  async function add() {
+    const t = title.trim();
+    if (!t || busy) return;
+    setBusy(true);
+    try {
+      await post(`/days/${date}/tasks`, { title: t, kind: 'might' });
+      setTitle('');
+      onChange();
+    } catch (e: any) {
+      alert(e.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+  const shown = tasks.filter((t) => t.status !== 'carried');
+  return (
+    <div className="might">
+      <ul className="might-list">
+        {shown.map((t) => (
+          <MightItem key={t.id} task={t} today={today} onChange={onChange} />
+        ))}
+      </ul>
+      {shown.length < 10 && (
+        <form className="add-row small" onSubmit={(e) => (e.preventDefault(), add())}>
+          <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="時間があればやること" aria-label="時間があればやること" />
+          <button className="btn btn-small" disabled={!title.trim() || busy}>追加</button>
+        </form>
+      )}
+    </div>
+  );
+}
+
+function MightItem({ task, today, onChange }: { task: Task; today: string; onChange: () => void }) {
+  const [done, setDone] = useState(task.status === 'done');
+  useEffect(() => setDone(task.status === 'done'), [task.status]);
+  return (
+    <li className={`with-actions ${task.status === 'dropped' ? 'dropped' : ''}`}>
+      <label className="check">
+        <input
+          type="checkbox"
+          checked={done}
+          disabled={task.status === 'dropped'}
+          onChange={async () => {
+            setDone(!done);
+            await patch(`/tasks/${task.id}`, { status: done ? 'todo' : 'done' });
+            onChange();
+          }}
+        />
+        <span className={done || task.status === 'dropped' ? 'done' : ''}>{task.title}</span>
+      </label>
+      <TaskActions task={task} today={today} onChange={onChange} />
+    </li>
   );
 }
