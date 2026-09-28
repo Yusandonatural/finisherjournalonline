@@ -14,7 +14,7 @@ const mock = async (path, body) => (await fetch(M + path, { method: body ? 'POST
 const ok = (c, m) => { if (!c) throw new Error('FAIL: ' + m); console.log('ok -', m); };
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const T = (s) => ({ title: [{ text: { content: s } }] });
-const tag = 'フィニッシャージャーナル';
+const tag = '目標達成ジャーナル';
 const page = async (id) => (await mock('/_pages')).find((p) => p.id === id);
 const props = (p) => ({
   title: p.properties.Name.title.map((t) => t.plain_text).join(''),

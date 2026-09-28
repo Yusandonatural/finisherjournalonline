@@ -4,21 +4,21 @@
     <meta charset="UTF-8" />
     <!-- ===== Google 標準セット（web-google-standard） ここから ===== -->
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <title>ログイン | Finisher Journal</title>
-    <meta name="description" content="90日ごとに目標を立て、1日1ページのジャーナルで積み上げる。紙のフィニッシャージャーナルをWebで続けるための、悠三堂の個人用ジャーナルアプリです。" />
+    <title>ログイン | 目標達成ジャーナル｜90日の挑戦</title>
+    <meta name="description" content="90日ごとに目標を立て、1日1ページのジャーナルで積み上げる。90日の挑戦をやりきるための、悠三堂の目標達成ジャーナルです。" />
     <meta name="robots" content="index,follow" />
     <link rel="canonical" href="https://journal.yusando.com/login" />
     <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="Finisher Journal" />
-    <meta property="og:title" content="Finisher Journal" />
-    <meta property="og:description" content="90日ごとに目標を立て、1日1ページのジャーナルで積み上げる。紙のフィニッシャージャーナルをWebで。" />
+    <meta property="og:site_name" content="目標達成ジャーナル｜90日の挑戦" />
+    <meta property="og:title" content="目標達成ジャーナル｜90日の挑戦" />
+    <meta property="og:description" content="90日ごとに目標を立て、1日1ページのジャーナルで積み上げる。90日の挑戦をやりきるための目標達成ジャーナル。" />
     <meta property="og:url" content="https://journal.yusando.com/login" />
     <meta property="og:image" content="https://journal.yusando.com/og.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:locale" content="ja_JP" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Finisher Journal" />
+    <meta name="twitter:title" content="目標達成ジャーナル｜90日の挑戦" />
     <meta name="twitter:description" content="90日ごとに目標を立て、1日1ページのジャーナルで積み上げる。" />
     <meta name="twitter:image" content="https://journal.yusando.com/og.png" />
     <script type="application/ld+json">
@@ -36,7 +36,7 @@
           {
             "@type": "WebApplication",
             "@id": "https://journal.yusando.com/#app",
-            "name": "Finisher Journal",
+            "name": "目標達成ジャーナル",
             "url": "https://journal.yusando.com/login",
             "applicationCategory": "ProductivityApplication",
             "operatingSystem": "Web",
@@ -76,13 +76,14 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@500;700&display=swap" rel="stylesheet" />
     <style>
-      :root { --bg: #f6f3ec; --surface: #fffdf8; --ink: #2b2a26; --muted: #767268; --line: #e2dccf; --accent: #3d6a4d; --accent-ink: #fff; --warn: #a94f36; }
-      @media (prefers-color-scheme: dark) { :root { --bg: #181a18; --surface: #212421; --ink: #ecebe4; --muted: #a3a097; --line: #353933; --accent: #8cc09b; --accent-ink: #13231a; --warn: #e79a82; } }
+      :root { --bg: #f6f3ec; --surface: #fffdf8; --ink: #2b2a26; --muted: #767268; --line: #e2dccf; --accent: #3d6a4d; --accent-ink: #fff; --warn: #a94f36; --gold: #a9853a; }
+      @media (prefers-color-scheme: dark) { :root { --bg: #181a18; --surface: #212421; --ink: #ecebe4; --muted: #a3a097; --line: #353933; --accent: #8cc09b; --accent-ink: #13231a; --warn: #e79a82; --gold: #d6b46a; } }
       * { box-sizing: border-box; }
       body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: var(--bg); color: var(--ink); font-family: 'Hiragino Sans', 'Noto Sans JP', system-ui, sans-serif; padding: 16px; }
       main { width: 100%; max-width: 420px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 40px 28px; text-align: center; }
       .mark { width: 56px; height: 56px; margin: 0 auto 16px; }
       h1 { font-family: 'Noto Serif JP', 'Hiragino Mincho ProN', serif; font-weight: 700; font-size: 28px; margin: 0 0 8px; letter-spacing: .02em; }
+      .sub { color: var(--gold) !important; font-weight: 700; letter-spacing: .12em; margin: -4px 0 16px !important; }
       p { color: var(--muted); line-height: 1.8; margin: 0 0 28px; font-size: 15px; }
       .btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 14px 18px; border-radius: 10px; background: var(--accent); color: var(--accent-ink); text-decoration: none; font-weight: 600; font-size: 16px; }
       .btn:hover { filter: brightness(1.05); }
@@ -96,7 +97,8 @@
   <body>
     <main>
       <img class="mark" src="/icon.svg" alt="" width="56" height="56" />
-      <h1>Finisher Journal</h1>
+      <h1>目標達成ジャーナル</h1>
+      <p class="sub">90日の挑戦</p>
       <p>90日の目標と、1日1ページの記録。<br />やりきるためのジャーナル。</p>
       <p class="error" id="error" role="alert"></p>
       <a class="btn" id="login" href="/auth/google">Googleでログイン</a>

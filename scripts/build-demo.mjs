@@ -4,7 +4,7 @@ const dir = 'dist/demo/assets';
 const files = readdirSync(dir);
 const js = readFileSync(`${dir}/${files.find((f) => f.endsWith('.js'))}`, 'utf8').replace(/<\/script/gi, '<\\/script');
 const css = readFileSync(`${dir}/${files.find((f) => f.endsWith('.css'))}`, 'utf8');
-const html = `<title>Finisher Journal</title>
+const html = `<title>目標達成ジャーナル</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@500;700&display=swap">

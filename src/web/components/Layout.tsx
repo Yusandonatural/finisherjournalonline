@@ -17,8 +17,11 @@ export function Layout() {
     <div className="app">
       <header className="topbar">
         <NavLink to="/today" className="brand">
-          <span className="brand-mark" aria-hidden="true">F</span>
-          <span>Finisher Journal</span>
+          <img className="brand-mark" src="/icon.svg" alt="" width="28" height="28" />
+          <span className="brand-text">
+            <span className="brand-name">目標達成ジャーナル</span>
+            <span className="brand-sub">90日の挑戦</span>
+          </span>
         </NavLink>
         <nav className="tabs" aria-label="メイン">
           {TABS.map((t) => (

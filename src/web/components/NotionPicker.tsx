@@ -41,7 +41,7 @@ export function NotionPicker({ date, onClose, onPicked }: { date: string; onClos
 
   return (
     <Modal title="Notion の Todo リストから選ぶ" onClose={onClose} wide>
-      <p className="muted small">Inbox・今週の対応事項・今月対応予定・未着手 の行から選べます。選んだ行には今日の日付とタグ「フィニッシャージャーナル」が付きます。</p>
+      <p className="muted small">Inbox・今週の対応事項・今月対応予定・未着手 の行から選べます。選んだ行には今日の日付とタグ「目標達成ジャーナル」が付きます。</p>
       <input className="search" placeholder="キーワード・タグ・場所で絞り込み" value={q} onChange={(e) => setQ(e.target.value)} autoFocus />
       {error && <p className="form-error">{error}</p>}
       {!items && !error && <Loading />}

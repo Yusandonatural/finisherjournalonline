@@ -122,7 +122,7 @@ export async function startDemo() {
     APP_URL: location.origin,
     ALLOWED_EMAILS: DEMO_USER.email,
     NOTION_TASKS_DB_ID: '',
-    NOTION_JOURNAL_TAG: 'フィニッシャージャーナル',
+    NOTION_JOURNAL_TAG: '目標達成ジャーナル',
     NOTION_ASSIGNEE: '',
   } as unknown as Env;
 

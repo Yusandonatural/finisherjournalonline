@@ -99,7 +99,10 @@ h1, h2, h3 { margin: 0; line-height: 1.4; }
   border-bottom: 1px solid var(--line);
 }
 .brand { display: flex; align-items: center; gap: 8px; color: var(--ink); font-family: var(--serif); font-weight: 700; font-size: 17px; text-decoration: none !important; white-space: nowrap; }
-.brand-mark { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 8px; background: var(--accent); color: var(--accent-ink); font-size: 16px; }
+.brand-mark { width: 30px; height: 30px; border-radius: 8px; flex: none; }
+.brand-text { display: flex; flex-direction: column; line-height: 1.15; }
+.brand-name { font-size: 16px; }
+.brand-sub { font-family: var(--sans); font-size: 11px; font-weight: 600; color: var(--gold); letter-spacing: .08em; }
 .tabs { display: flex; gap: 4px; margin: 0 auto; background: var(--surface-2); padding: 4px; border-radius: 999px; }
 .tabs a, .settings-link { padding: 6px 18px; border-radius: 999px; color: var(--muted); font-weight: 600; text-decoration: none !important; white-space: nowrap; }
 .tabs a.active { background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }

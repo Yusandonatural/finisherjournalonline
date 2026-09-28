@@ -1,5 +1,5 @@
 // 既存の Notion データベース「🎒 Todo リスト」との同期。
-// アプリが触るのはタグ「フィニッシャージャーナル」が付いた行だけ。
+// アプリが触るのはタグ「目標達成ジャーナル」が付いた行だけ。
 import { todayJST } from '../shared/dates';
 import type { TaskStatus } from '../shared/progress';
 import { all, one, run } from './db';

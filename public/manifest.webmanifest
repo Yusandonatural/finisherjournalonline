@@ -1,7 +1,7 @@
 {
-  "name": "Finisher Journal",
-  "short_name": "Journal",
-  "description": "90日の目標と、1日1ページの記録。",
+  "name": "目標達成ジャーナル｜90日の挑戦",
+  "short_name": "目標達成",
+  "description": "90日の挑戦。90日の目標と、1日1ページの記録。",
   "lang": "ja",
   "start_url": "/today",
   "scope": "/",
