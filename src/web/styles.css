@@ -1,51 +1,71 @@
 /* ===== トークン ===== */
 :root {
-  --bg: #f6f3ec;
-  --surface: #fffdf8;
-  --surface-2: #f1ede3;
-  --ink: #2b2a26;
-  --muted: #767268;
-  --line: #e2dccf;
-  --accent: #3d6a4d;
+  --bg: #f4efe4;
+  --surface: #fffdf7;
+  --surface-2: #f2ecdf;
+  --ink: #25241f;
+  --muted: #75705f;
+  --line: #e6dfcf;
+  --accent: #2f5d43;
   --accent-ink: #ffffff;
-  --accent-soft: #e2ece3;
-  --warn: #a94f36;
-  --warn-soft: #f6e2da;
-  --gold: #a9853a;
-  --gold-soft: #f3ead6;
-  --good: #3d6a4d;
-  --todo: #b9b3a5;
-  --shadow: 0 1px 2px rgba(60, 50, 30, 0.06), 0 4px 16px rgba(60, 50, 30, 0.05);
-  --radius: 14px;
-  --serif: 'Noto Serif JP', 'Hiragino Mincho ProN', 'Yu Mincho', serif;
-  --sans: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', 'Yu Gothic UI', system-ui, sans-serif;
+  --accent-soft: #e3ece2;
+  --warn: #a6492f;
+  --warn-soft: #f7e3da;
+  --gold: #a8812f;
+  --gold-soft: #f4ead3;
+  --good: #2f5d43;
+  --todo: #bdb5a2;
+  --rule: #e9e1cf;
+  --shadow: 0 1px 1px rgba(70, 55, 25, 0.04), 0 6px 20px -8px rgba(70, 55, 25, 0.12);
+  --shadow-lift: 0 2px 4px rgba(70, 55, 25, 0.06), 0 14px 32px -12px rgba(70, 55, 25, 0.22);
+  --radius: 16px;
+  --serif: 'Shippori Mincho', 'Hiragino Mincho ProN', 'Yu Mincho', serif;
+  --sans: 'Zen Kaku Gothic New', 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', 'Yu Gothic UI', system-ui, sans-serif;
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
-    --bg: #181a18;
-    --surface: #212421;
-    --surface-2: #2a2e2a;
-    --ink: #ecebe4;
-    --muted: #a3a097;
-    --line: #353933;
-    --accent: #8cc09b;
-    --accent-ink: #13231a;
-    --accent-soft: #263a2c;
-    --warn: #e79a82;
-    --warn-soft: #3d2721;
-    --gold: #d6b46a;
-    --gold-soft: #3a321f;
-    --good: #8cc09b;
-    --todo: #5d605a;
-    --shadow: none;
+    --bg: #151714;
+    --surface: #1d201c;
+    --surface-2: #262a25;
+    --ink: #edeae0;
+    --muted: #a39f92;
+    --line: #333830;
+    --accent: #8fc3a0;
+    --accent-ink: #11231a;
+    --accent-soft: #22362a;
+    --warn: #e89b83;
+    --warn-soft: #3b2620;
+    --gold: #d8b66c;
+    --gold-soft: #37301e;
+    --good: #8fc3a0;
+    --todo: #5b5f57;
+    --rule: #2c312a;
+    --shadow: 0 1px 0 rgba(255, 255, 255, 0.03) inset;
+    --shadow-lift: 0 10px 30px -12px rgba(0, 0, 0, 0.6);
     color-scheme: dark;
   }
 }
 :root[data-theme='dark'] {
-  --bg: #181a18; --surface: #212421; --surface-2: #2a2e2a; --ink: #ecebe4; --muted: #a3a097; --line: #353933;
-  --accent: #8cc09b; --accent-ink: #13231a; --accent-soft: #263a2c; --warn: #e79a82; --warn-soft: #3d2721;
-  --gold: #d6b46a; --gold-soft: #3a321f; --good: #8cc09b; --todo: #5d605a; --shadow: none; color-scheme: dark;
+  --bg: #151714;
+  --surface: #1d201c;
+  --surface-2: #262a25;
+  --ink: #edeae0;
+  --muted: #a39f92;
+  --line: #333830;
+  --accent: #8fc3a0;
+  --accent-ink: #11231a;
+  --accent-soft: #22362a;
+  --warn: #e89b83;
+  --warn-soft: #3b2620;
+  --gold: #d8b66c;
+  --gold-soft: #37301e;
+  --good: #8fc3a0;
+  --todo: #5b5f57;
+  --rule: #2c312a;
+  --shadow: 0 1px 0 rgba(255, 255, 255, 0.03) inset;
+  --shadow-lift: 0 10px 30px -12px rgba(0, 0, 0, 0.6);
+  color-scheme: dark;
 }
 
 /* ===== ベース ===== */
@@ -464,3 +484,123 @@ h1, h2, h3 { margin: 0; line-height: 1.4; }
 .tl-time { font-size: 11px; opacity: .9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 .tl-now { position: absolute; left: 40px; right: 0; height: 2px; background: var(--warn); pointer-events: none; }
 .tl-now::before { content: ''; position: absolute; left: -4px; top: -4px; width: 10px; height: 10px; border-radius: 50%; background: var(--warn); }
+
+
+/* ===================================================================
+   仕上げ（紙の手帳のような質感）
+   =================================================================== */
+body { font-size: 15.5px; letter-spacing: .01em; font-feature-settings: 'palt' 0; }
+h1, h2, h3, .card-title, .page-title { text-wrap: balance; }
+
+/* ヘッダー */
+.topbar { padding-block: 12px; border-bottom-color: transparent; box-shadow: 0 1px 0 var(--line); }
+.brand-name { font-family: var(--serif); font-weight: 700; font-size: 17px; letter-spacing: .04em; }
+.brand-sub { letter-spacing: .18em; }
+.tabs { background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--line); }
+.tabs a { padding: 6px 20px; transition: color .15s, background .15s; }
+.tabs a:hover { color: var(--ink); }
+.tabs a.active { box-shadow: 0 1px 2px rgba(70, 55, 25, .12), 0 0 0 1px var(--line); }
+
+/* カード */
+.card { border-color: var(--line); box-shadow: var(--shadow); padding: 20px 22px; }
+.card-title { font-size: 18px; letter-spacing: .06em; }
+.mini-title { letter-spacing: .14em; }
+.main { padding-top: 24px; }
+.page { gap: 18px; }
+
+/* 日付の見出し */
+.day-heading h1 { font-size: 30px; letter-spacing: .04em; font-weight: 700; }
+.day-meta { margin-top: 6px; gap: 6px 12px; align-items: center; }
+.day-meta strong { display: inline-flex; align-items: center; padding: 1px 12px; border-radius: 999px; background: var(--gold-soft); color: var(--gold); font-size: 14px; letter-spacing: .06em; }
+.day-progress { width: min(320px, 70%); height: 3px; margin: 10px auto 0; border-radius: 999px; background: var(--rule); overflow: hidden; }
+.day-progress > span { display: block; height: 100%; background: linear-gradient(90deg, var(--gold), var(--accent)); border-radius: inherit; }
+.period-header .page-title { font-size: 26px; letter-spacing: .04em; }
+.icon-btn { color: var(--muted); }
+
+/* チェックボックス（丸く、指で押しやすく） */
+input[type='checkbox'] {
+  appearance: none; -webkit-appearance: none;
+  width: 20px; height: 20px; border-radius: 50%;
+  border: 1.5px solid color-mix(in srgb, var(--muted) 55%, transparent);
+  background: var(--surface); display: inline-grid; place-content: center; cursor: pointer;
+  transition: background .15s, border-color .15s, transform .1s;
+}
+input[type='checkbox']::after {
+  content: ''; width: 9px; height: 5px; border: 2px solid var(--accent-ink); border-top: 0; border-right: 0;
+  transform: rotate(-45deg) translate(1px, -1px) scale(0); transition: transform .15s;
+}
+input[type='checkbox']:checked { background: var(--accent); border-color: var(--accent); }
+input[type='checkbox']:checked::after { transform: rotate(-45deg) translate(1px, -1px) scale(1); }
+input[type='checkbox']:active { transform: scale(.92); }
+input[type='checkbox']:disabled { opacity: .45; cursor: default; }
+input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.task-check { width: 26px !important; height: 26px !important; margin-top: 6px !important; }
+.task-check::after { width: 11px !important; height: 6px !important; }
+@media (prefers-reduced-motion: reduce) { input[type='checkbox'], input[type='checkbox']::after { transition: none; } }
+
+/* やるべきこと */
+.task-row { padding: 12px 0; border-bottom-color: var(--rule); }
+.task-title { font-size: 17px; }
+.task-num { border-style: solid; border-color: var(--rule); font-family: var(--serif); color: var(--gold); width: 26px; height: 26px; margin-top: 6px; }
+.term-rate { margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--rule); }
+
+/* 罫線の入力欄（紙のノートのように） */
+.big-input, .goods input, .memo {
+  border: 0; border-radius: 0; background: transparent; padding-left: 2px; padding-right: 2px;
+}
+.big-input { border-bottom: 1px solid var(--rule); font-family: var(--serif); font-size: 19px; font-weight: 600; letter-spacing: .03em; padding-block: 8px; }
+.goods { padding-left: 0; list-style: none; counter-reset: good; gap: 0; }
+.goods li { display: flex; align-items: center; gap: 10px; counter-increment: good; border-bottom: 1px solid var(--rule); }
+.goods li::before { content: counter(good); flex: none; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--gold-soft); color: var(--gold); font-family: var(--serif); font-weight: 700; font-size: 13px; }
+.goods input { padding-block: 10px; font-size: 16px; }
+.memo {
+  line-height: 32px; padding-top: 0;
+  background-image: repeating-linear-gradient(to bottom, transparent 0 31px, var(--rule) 31px 32px);
+  background-attachment: local; min-height: 160px;
+}
+.big-input:focus, .goods input:focus, .memo:focus { outline: none; border-color: var(--accent); }
+.goods li:focus-within { border-bottom-color: var(--accent); }
+.memo:focus { box-shadow: inset 0 -2px 0 var(--accent); }
+
+/* 目標パネル */
+.goals-card { border-left-width: 1px; position: relative; overflow: hidden; }
+.goals-card::before { content: ''; position: absolute; inset: 0 auto 0 0; width: 4px; background: linear-gradient(var(--gold), color-mix(in srgb, var(--gold) 40%, transparent)); }
+.goal-title { font-weight: 700; }
+.goal-pct { font-family: var(--serif); font-weight: 700; color: var(--ink); }
+.progress { height: 6px; background: var(--rule); }
+.goal-list > li { border-bottom-color: var(--rule); padding: 10px 0; }
+
+/* 数字のタイル */
+.stat { box-shadow: var(--shadow); padding: 16px 18px; }
+.stat-value { font-size: 30px; letter-spacing: .02em; }
+.stat-label { letter-spacing: .08em; }
+
+/* ボタン */
+.btn { border-radius: 999px; padding: 8px 18px; transition: background .15s, box-shadow .15s, transform .1s; }
+.btn-small { padding: 5px 14px; }
+.btn:active { transform: translateY(1px); }
+.btn-primary { box-shadow: 0 6px 16px -8px color-mix(in srgb, var(--accent) 70%, transparent); }
+.complete-bar .btn { padding: 14px 36px; font-size: 16px; letter-spacing: .06em; }
+@media (max-width: 760px) { .complete-bar .btn { width: 100%; } }
+
+/* 予定 */
+.event-line { border-radius: 10px; }
+.tl-event { border-radius: 8px; box-shadow: 0 0 0 1.5px var(--surface), 0 4px 10px -6px rgba(0,0,0,.35); }
+
+/* 下のタブ（スマホ） */
+.bottombar { box-shadow: 0 -6px 20px -14px rgba(70, 55, 25, .35); border-top-color: var(--line); }
+.bb-icon { font-weight: 700; }
+
+/* 週・月 */
+.week-day { background: var(--surface); border-color: var(--rule); }
+.month-cell { background: var(--surface); border-color: var(--rule); }
+.month-cell.filled { background: color-mix(in srgb, var(--accent-soft) 70%, var(--surface)); }
+
+/* デモの帯 */
+.demo-bar { font-size: 12.5px; }
+@media (max-width: 760px) {
+  .day-heading h1 { font-size: clamp(20px, 6vw, 24px); white-space: nowrap; letter-spacing: .02em; }
+  .period-header .page-title { font-size: 21px; }
+  .card { padding: 16px 16px; }
+  .card-title { font-size: 17px; }
+}

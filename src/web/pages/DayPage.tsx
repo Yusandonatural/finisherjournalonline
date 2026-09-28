@@ -87,6 +87,11 @@ function DayView({ date }: { date: string }) {
             {term && <span>{term.title}</span>}
             {term && info?.phase === 'active' && <span>残り {info.daysLeft}日</span>}
           </p>
+          {term && info?.phase === 'active' && (
+            <div className="day-progress" role="progressbar" aria-label="タームの経過" aria-valuenow={info.elapsedPct} aria-valuemin={0} aria-valuemax={100}>
+              <span style={{ width: `${info.elapsedPct}%` }} />
+            </div>
+          )}
         </div>
         <Link className="icon-btn" to={`/day/${addDays(date, 1)}`} aria-label="次の日">›</Link>
       </header>
