@@ -154,6 +154,7 @@ dayRoutes.post('/tasks/:id/carry', async (c) => {
   const created = await createTask(c.env, u.id, {
     date,
     kind: t.kind,
+    source: t.source, // Notion から選んだタスクは送っても Notion の行として扱う
     title: t.title,
     goal_id: t.goal_id,
     carried_from_id: t.id,

@@ -1,4 +1,5 @@
 // 既存の Notion データベース「🎒 Todo リスト」との同期。
+// アプリで作ったタスクは「できた」にしたものだけを完了の記録として送る。
 // アプリが触るのはタグ「目標達成ジャーナル」が付いた行だけ。
 import { todayJST } from '../shared/dates';
 import type { TaskStatus } from '../shared/progress';
@@ -159,18 +160,35 @@ async function pushTask(env: Env, task: any) {
   );
 }
 
+/**
+ * Notion に送る対象:
+ * - アプリで作ったタスクは「できた」になったものだけ（完了の記録として Todo リストに追加）。
+ *   すでに送った行は、完了を外したときに片付けるため対象に含める
+ * - Notion から選んだ／取り込んだ行は、もともと Notion の行なので状態を送り続ける
+ */
+const SENDABLE = `notion_dirty = 1 AND kind = 'must' AND title != '' AND (
+  notion_page_id IS NOT NULL OR (source = 'app' AND status = 'done')
+)`;
+
 /** 未同期のタスクを Notion へ送る */
 export async function pushDirty(env: Env, limit = 30) {
   if (!notionEnabled(env)) return { pushed: 0, errors: 0 };
   const tasks = await all(
     env.DB,
-    "SELECT * FROM tasks WHERE notion_dirty = 1 AND kind = 'must' AND title != '' AND (notion_page_id IS NOT NULL OR status NOT IN ('dropped', 'carried')) ORDER BY updated_at LIMIT ?",
+    `SELECT * FROM tasks WHERE ${SENDABLE} ORDER BY updated_at LIMIT ?`,
     limit,
   );
   let pushed = 0;
   let errors = 0;
   for (const t of tasks) {
     try {
+      if (t.source === 'app' && t.status !== 'done' && t.notion_page_id) {
+        // 完了を外したアプリのタスク → Notion の行を片付ける
+        await notion(env, 'PATCH', `/pages/${t.notion_page_id}`, { archived: true });
+        await run(env.DB, 'UPDATE tasks SET notion_page_id = NULL, notion_snapshot = NULL, notion_dirty = 0, notion_error = NULL WHERE id = ?', t.id);
+        pushed++;
+        continue;
+      }
       await pushTask(env, t);
       pushed++;
     } catch (e: any) {
@@ -309,7 +327,7 @@ export async function pickFromNotion(env: Env, userId: string, pageId: string, d
 
 export async function status(env: Env) {
   const last = await one(env.DB, "SELECT value FROM sync_state WHERE key = 'notion_last_pull'");
-  const dirty = await one(env.DB, "SELECT COUNT(*) AS n FROM tasks WHERE notion_dirty = 1 AND kind = 'must' AND title != '' AND (notion_page_id IS NOT NULL OR status NOT IN ('dropped', 'carried'))");
+  const dirty = await one(env.DB, `SELECT COUNT(*) AS n FROM tasks WHERE ${SENDABLE}`);
   const errors = await one(env.DB, 'SELECT COUNT(*) AS n FROM tasks WHERE notion_error IS NOT NULL');
   const logs = await all(env.DB, 'SELECT * FROM notion_sync_log ORDER BY id DESC LIMIT 20');
   return {

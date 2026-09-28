@@ -45,44 +45,24 @@ ok((await mock('/_pages')).length === 4, 'pick does not duplicate the Notion row
 const t = await req('POST', '/api/days/2026-10-02/tasks', { title: '物件の内見', goal_id: goal.id });
 await sleep(1500); // waitUntil の送信を待つ
 let st = await req('GET', '/api/notion/status');
-let rows = await mock('/_pages');
-let created = rows.find((p) => props(p).title === '物件の内見');
-ok(created && st.dirty === 0, 'app task pushed to Notion automatically');
-let pc = props(created);
-ok(pc.tags.includes(tag) && pc.tags.includes('カフェ/SHOPをオープンする') && pc.assignee[0] === '礒﨑遼太郎' && pc.content.includes('Day 2') && pc.content.includes('目標: カフェ'), 'new row has tag, goal tag, assignee, Day and goal in 内容');
+const titled = async (title) => (await mock('/_pages')).filter((p) => props(p).title === title && !p.archived);
+ok((await titled('物件の内見')).length === 0 && st.dirty === 0, 'a new app task is NOT sent to Notion while not done');
 
-// Notion 側で完了にする
-await mock(`/_edit/${A}`, { Checked: { checkbox: true } });
-let r = await req('POST', '/api/notion/sync');
-let day = await req('GET', '/api/days/2026-10-02');
-ok(day.tasks.find((x) => x.notion_page_id === A).status === 'done', 'checking in Notion marks the task done in the app');
-// 自分の書き込みの跳ね返りでは変わらない
-r = await req('POST', '/api/notion/sync');
-ok(r.updated === 0, 'echo of own writes is ignored');
-
-// Notion でタグ＋日付付きの新規行
-const D = (await mock('/_seed', { Name: T('Notionで追加'), Date: { date: { start: '2026-10-03' } }, 'ステータス': { select: { name: '未着手' } }, 'タグ': { multi_select: [{ name: tag }] } })).id;
-r = await req('POST', '/api/notion/sync');
-day = await req('GET', '/api/days/2026-10-03');
-ok(r.created === 1 && day.tasks[0].title === 'Notionで追加' && day.tasks[0].source === 'notion', 'new tagged row with date is imported');
-// Notion で日付とタイトルを変更
-await mock(`/_edit/${D}`, { Date: { date: { start: '2026-10-04' } }, Name: T('Notionで追加（改）') });
-await req('POST', '/api/notion/sync');
-day = await req('GET', '/api/days/2026-10-04');
-ok(day.tasks[0]?.title === 'Notionで追加（改）', 'date and title changes in Notion move/rename the task');
-
-// アプリで「できなかった」→ Notion
+// できなかった でも送らない
 await req('PATCH', `/api/tasks/${t.id}`, { status: 'missed' });
-await sleep(1500);
-pc = props(await page(created.id));
-ok(pc.status === 'できなかった' && pc.checked === false, 'missed in app → ステータス できなかった in Notion');
+await req('POST', '/api/notion/sync');
+ok((await titled('物件の内見')).length === 0, 'a missed app task is not sent');
 
-// 送る → 同じ行の日付が動く（複製しない）
+// 送る（未完了なので Notion の行はない）→ 送り先で「できた」にしたら送る
 const moved = await req('POST', `/api/tasks/${t.id}/carry`, { date: '2026-10-05' });
+await req('PATCH', `/api/tasks/${moved.id}`, { status: 'done' });
 await sleep(1500);
-pc = props(await page(created.id));
-ok(pc.date === '2026-10-05' && pc.status === '未着手' && pc.content.includes('送った回数: 1'), 'carry moves the same Notion row to the new date');
-ok((await mock('/_pages')).filter((p) => props(p).title === '物件の内見').length === 1, 'carry does not duplicate the row');
+let rows = await titled('物件の内見');
+ok(rows.length === 1, 'checking "done" sends the task to Notion');
+let pc = props(rows[0]);
+const created = rows[0];
+ok(pc.status === '完了' && pc.checked === true && pc.date === '2026-10-05', 'sent as 完了 with Checked on the day it was done');
+ok(pc.tags.includes(tag) && pc.tags.includes('カフェ/SHOPをオープンする') && pc.assignee[0] === '礒﨑遼太郎' && pc.content.includes('目標: カフェ') && pc.content.includes('送った回数: 1'), 'row has tag, goal tag, assignee, goal and carry count in 内容');
 
 // ゴール名変更 → タグに反映（既存タグは残す）
 await req('PATCH', `/api/goals/${goal.id}`, { title: 'カフェをオープン' });
@@ -90,18 +70,58 @@ await req('POST', '/api/notion/sync');
 pc = props(await page(created.id));
 ok(pc.tags.includes('カフェをオープン') && pc.content.includes('目標: カフェをオープン'), 'goal rename updates Notion');
 
+// 完了を外す → Notion の行を片付ける。もう一度完了 → 新しく送る
+await req('PATCH', `/api/tasks/${moved.id}`, { status: 'todo' });
+await sleep(1500);
+ok((await page(created.id)).archived === true && (await titled('物件の内見')).length === 0, 'unchecking removes (archives) the Notion row');
+await req('PATCH', `/api/tasks/${moved.id}`, { status: 'done' });
+await sleep(1500);
+ok((await titled('物件の内見')).length === 1, 'checking again sends it again');
+
 // 削除 → アーカイブ
 await req('DELETE', `/api/tasks/${moved.id}`);
 await sleep(1500);
-ok((await page(created.id)).archived === true, 'deleting a task archives the Notion row');
+ok((await titled('物件の内見')).length === 0, 'deleting a done task archives the Notion row');
 
-// 時間があればやることは Notion に送らない。上げたら送る
-const mt = await req('POST', '/api/days/2026-10-06/tasks', { title: 'もしできたら読書', kind: 'might' });
+// Notion から選んだ行は状態を送り続ける
+await mock(`/_edit/${A}`, { Checked: { checkbox: true } });
+let r = await req('POST', '/api/notion/sync');
+let day = await req('GET', '/api/days/2026-10-02');
+ok(day.tasks.find((x) => x.notion_page_id === A).status === 'done', 'checking in Notion marks a picked task done in the app');
+r = await req('POST', '/api/notion/sync');
+ok(r.updated === 0, 'echo of own writes is ignored');
+const pickedTask = day.tasks.find((x) => x.notion_page_id === A);
+await req('PATCH', `/api/tasks/${pickedTask.id}`, { status: 'missed' });
+await sleep(1500);
+pc = props(await page(A));
+ok(pc.status === 'できなかった' && pc.checked === false && !(await page(A)).archived, 'a picked row keeps syncing its status (できなかった), not archived');
+const pickedMoved = await req('POST', `/api/tasks/${pickedTask.id}/carry`, { date: '2026-10-07' });
+await sleep(1500);
+pc = props(await page(A));
+ok(pc.date === '2026-10-07' && pc.status === '未着手' && pickedMoved.notion_page_id === A, 'carrying a picked task moves the same Notion row');
+
+// Notion でタグ＋日付付きの新規行
+const D = (await mock('/_seed', { Name: T('Notionで追加'), Date: { date: { start: '2026-10-03' } }, 'ステータス': { select: { name: '未着手' } }, 'タグ': { multi_select: [{ name: tag }] } })).id;
+r = await req('POST', '/api/notion/sync');
+day = await req('GET', '/api/days/2026-10-03');
+ok(r.created === 1 && day.tasks[0].title === 'Notionで追加' && day.tasks[0].source === 'notion', 'new tagged row with date is imported');
+await mock(`/_edit/${D}`, { Date: { date: { start: '2026-10-04' } }, Name: T('Notionで追加（改）') });
 await req('POST', '/api/notion/sync');
-ok(!(await mock('/_pages')).some((p) => props(p).title === 'もしできたら読書'), 'might-do items are not sent to Notion');
+day = await req('GET', '/api/days/2026-10-04');
+ok(day.tasks[0]?.title === 'Notionで追加（改）', 'date and title changes in Notion move/rename the task');
+
+// 時間があればやることは送らない。上げても、できたにするまでは送らない
+const mt = await req('POST', '/api/days/2026-10-06/tasks', { title: 'もしできたら読書', kind: 'might' });
+await req('PATCH', `/api/tasks/${mt.id}`, { status: 'done' });
+await req('POST', '/api/notion/sync');
+ok((await titled('もしできたら読書')).length === 0, 'done might-do items are not sent to Notion');
+await req('PATCH', `/api/tasks/${mt.id}`, { status: 'todo' });
 await req('POST', `/api/tasks/${mt.id}/promote`);
 await sleep(1500);
-ok((await mock('/_pages')).some((p) => props(p).title === 'もしできたら読書'), 'promoted item is sent to Notion');
+ok((await titled('もしできたら読書')).length === 0, 'promoted item is not sent until done');
+await req('PATCH', `/api/tasks/${mt.id}`, { status: 'done' });
+await sleep(1500);
+ok((await titled('もしできたら読書')).length === 1, 'promoted item is sent once done');
 
 // 触ってはいけない行
 ok(props(await page(Bp)).tags.length === 0 && props(await page(Bp)).status === '今週の対応事項', 'untagged rows are never modified');

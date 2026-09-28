@@ -147,6 +147,7 @@ function DayView({ date }: { date: string }) {
                 </div>
               </>
             )}
+            {data.notionEnabled && <p className="muted small">「できた」にしたタスクは Notion の Todo リストに完了として記録されます。</p>}
             {carried.length > 0 && (
               <p className="muted small">他の日へ送ったもの: {carried.map((t) => t.title).join('、')}</p>
             )}

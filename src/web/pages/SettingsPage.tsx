@@ -107,6 +107,7 @@ export function SettingsPage() {
           <>
             <p>
               同期先: 🎒 Todo リスト（タグ「{notion.data.tag}」の行のみ）<br />
+              <span className="small">アプリで作ったタスクは「できた」にしたものだけ送ります。Notion から選んだタスクは状態を同期します。</span><br />
               <span className="muted small">
                 最終取り込み: {notion.data.lastPull ? new Date(notion.data.lastPull).toLocaleString('ja-JP') : 'まだ'} ・ 未同期 {notion.data.dirty}件 ・ エラー {notion.data.errors}件
               </span>
