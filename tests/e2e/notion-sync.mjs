@@ -32,6 +32,9 @@ const Bp = (await mock('/_seed', { Name: T('役所に書類'), 'ステータス'
 await mock('/_seed', { Name: T('済んだこと'), 'ステータス': { select: { name: '完了' } }, 'タグ': { multi_select: [] } });
 await mock('/_seed', { Name: T('ルーティン'), 'ステータス': { select: { name: '毎日のルーティン' } }, 'タグ': { multi_select: [] } });
 
+// タグ「目標達成ジャーナル」がまだ Notion に一度もない状態でも同期が通る
+const r0 = await req('POST', '/api/notion/sync');
+ok(!r0.pullError, 'sync works before the journal tag exists in Notion');
 const cands = await req('GET', '/api/notion/candidates');
 ok(cands.length === 2 && cands[0].pageId === A, 'candidates: only Inbox/今週 rows, high priority first');
 

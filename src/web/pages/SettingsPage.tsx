@@ -34,7 +34,7 @@ export function SettingsPage() {
     setSyncMsg(null);
     try {
       const r = await post('/notion/sync');
-      setSyncMsg(`送信 ${r.pushed}件・取り込み 更新${r.updated}件／新規${r.created}件${r.errors ? `・エラー ${r.errors}件` : ''}`);
+      setSyncMsg(`送信 ${r.pushed}件・取り込み 更新${r.updated}件／新規${r.created}件${r.errors ? `・エラー ${r.errors}件` : ''}${r.pullError ? `（取り込みでエラー: ${r.pullError}）` : ''}`);
     } catch (e: any) {
       setSyncMsg(e.message);
     }

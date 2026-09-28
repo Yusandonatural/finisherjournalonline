@@ -28,6 +28,9 @@ function match(p, f) {
   if (f.timestamp === 'last_edited_time') return p.last_edited_time >= f.last_edited_time.on_or_after;
   const prop = p.properties[f.property];
   if (f.multi_select) {
+    const want = f.multi_select.contains ?? f.multi_select.does_not_contain;
+    const known = new Set([...pages.values()].flatMap((pg) => (pg.properties[f.property]?.multi_select ?? []).map((x) => x.name)));
+    if (!known.has(want)) throw Object.assign(new Error(`multi_select option "${want}" not found for property "${f.property}".`), { status: 400 });
     const names = (prop?.multi_select ?? []).map((x) => x.name);
     if ('contains' in f.multi_select) return names.includes(f.multi_select.contains);
     if ('does_not_contain' in f.multi_select) return !names.includes(f.multi_select.does_not_contain);
@@ -44,8 +47,13 @@ const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://x');
   let m;
   if (req.method === 'POST' && (m = url.pathname.match(/^\/databases\/([^/]+)\/query$/))) {
-    const results = [...pages.values()].filter((p) => !p.archived && match(p, j.filter));
-    return send(200, { results, has_more: false });
+    try {
+      const results = [...pages.values()].filter((p) => !p.archived && match(p, j.filter));
+      return send(200, { results, has_more: false });
+    } catch (e) {
+      if (e.status === 400) return send(400, { message: e.message });
+      throw e;
+    }
   }
   if (req.method === 'POST' && url.pathname === '/pages') {
     const id = seed(j.properties);

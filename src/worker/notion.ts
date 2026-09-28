@@ -210,6 +210,11 @@ export async function archivePage(env: Env, pageId: string) {
   }
 }
 
+/** 絞り込みに使ったタグ（選択肢）がまだデータベースにないときの Notion のエラー */
+function isMissingOption(e: unknown): boolean {
+  return /option .* not found for property/i.test(String((e as Error)?.message ?? ''));
+}
+
 async function queryAll(env: Env, filter: unknown, max = 500) {
   const pages: any[] = [];
   let cursor: string | undefined;
@@ -239,7 +244,13 @@ export async function pull(env: Env) {
 
   let updated = 0;
   let created = 0;
-  const pages = await queryAll(env, filter);
+  let pages: any[] = [];
+  try {
+    pages = await queryAll(env, filter);
+  } catch (e) {
+    // タグ「目標達成ジャーナル」がまだ一度も使われていない → 取り込む行はない
+    if (!isMissingOption(e)) throw e;
+  }
   for (const page of pages) {
     if (page.archived || page.in_trash) continue;
     const v = readPage(page);
@@ -288,15 +299,18 @@ export async function pull(env: Env) {
 
 export async function syncAll(env: Env) {
   if (!notionEnabled(env)) return null;
+  // 先に Notion の変更を取り込んでから送る（Notion 側の編集を古い値で上書きしないため）。
+  // 取り込みに失敗しても送信は行う
+  let q = { updated: 0, created: 0 };
+  let pullError: string | null = null;
   try {
-    // 先に Notion の変更を取り込んでから送る（Notion 側の編集を古い値で上書きしないため）
-    const q = await pull(env);
-    const p = await pushDirty(env);
-    return { ...p, ...q };
+    q = await pull(env);
   } catch (e: any) {
+    pullError = e.message;
     await log(env, null, 'pull', 'error', e.message);
-    throw e;
   }
+  const p = await pushDirty(env);
+  return { ...p, ...q, pullError };
 }
 
 /** 「Notionから選ぶ」: まだジャーナルに入っていない Inbox／今週／今月／未着手 の行 */
@@ -307,7 +321,14 @@ export async function candidates(env: Env) {
       { property: PROP.tags, multi_select: { does_not_contain: env.NOTION_JOURNAL_TAG } },
     ],
   };
-  const pages = await queryAll(env, filter, 200);
+  let pages: any[];
+  try {
+    pages = await queryAll(env, filter, 200);
+  } catch (e) {
+    if (!isMissingOption(e)) throw e;
+    // タグがまだないときは、ステータスだけで絞り込む（どの行にもまだタグは付いていない）
+    pages = await queryAll(env, filter.and[0], 200);
+  }
   const order = (p: string | null) => (p?.startsWith('高') ? 0 : p === '中' ? 1 : p === '低' ? 3 : 2);
   return pages
     .map(readPage)
