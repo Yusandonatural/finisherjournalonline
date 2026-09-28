@@ -200,7 +200,7 @@ h1, h2, h3 { margin: 0; line-height: 1.4; }
 .day-meta { margin: 2px 0 0; display: flex; justify-content: center; flex-wrap: wrap; gap: 4px 14px; color: var(--muted); font-size: 13px; }
 .day-meta strong { color: var(--gold); font-family: var(--serif); font-size: 15px; }
 .day-grid { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 16px; align-items: start; }
-.day-aside { order: 2; position: sticky; top: 72px; }
+.day-aside { order: 2; position: sticky; top: 72px; overflow-y: auto; }
 .day-main { order: 1; display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 @media (max-width: 960px) {
   .day-grid { grid-template-columns: 1fr; }
@@ -430,3 +430,34 @@ h1, h2, h3 { margin: 0; line-height: 1.4; }
 .might-list li { padding: 3px 0; }
 .might-list li.dropped span { color: var(--muted); }
 .might .add-row { margin-top: 6px; }
+
+/* 1日のタイムライン */
+.mobile-only { display: none; }
+.desktop-block { display: none; }
+@media (max-width: 960px) {
+  .desktop-only { display: none !important; }
+  .mobile-only { display: inline-flex; }
+  div.mobile-only { display: block; }
+}
+@media (min-width: 961px) { .desktop-block { display: block; } }
+.day-aside { display: flex; flex-direction: column; gap: 16px; }
+@media (min-width: 961px) { .day-aside { max-height: calc(100vh - 88px); } }
+.day-aside > * { flex-shrink: 0; }
+.timeline-card { display: flex; flex-direction: column; }
+.timeline { display: flex; flex-direction: column; }
+.tl-allday { display: flex; flex-wrap: wrap; gap: 4px; padding-bottom: 6px; margin-bottom: 4px; border-bottom: 1px solid var(--line); }
+.tl-chip { border: 0; border-radius: 6px; padding: 2px 8px; font-size: 12px; color: #fff; font-weight: 600; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tl-scroll { overflow-y: auto; max-height: 520px; min-height: 200px; }
+.timeline-card .tl-scroll { max-height: min(440px, 48vh); }
+.tl-grid { position: relative; }
+.tl-hour { position: absolute; left: 0; right: 0; border: 0; border-top: 1px solid var(--line); background: transparent; padding: 0; text-align: left; cursor: pointer; }
+.tl-hour:hover { background: var(--surface-2); }
+.tl-label { position: absolute; top: -8px; left: 0; width: 40px; padding-right: 6px; text-align: right; font-size: 11px; color: var(--muted); background: var(--surface); font-variant-numeric: tabular-nums; }
+.tl-events { position: absolute; top: 0; bottom: 0; left: 46px; right: 2px; pointer-events: none; }
+.tl-event { position: absolute; pointer-events: auto; display: flex; flex-direction: column; align-items: flex-start; overflow: hidden; border: 0; border-radius: 6px; padding: 2px 6px; color: #fff; text-align: left; font-size: 12px; line-height: 1.35; box-shadow: 0 0 0 1px var(--surface); }
+.tl-event:hover { filter: brightness(1.08); }
+.tl-event.short { flex-direction: row; gap: 6px; align-items: baseline; }
+.tl-title { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.tl-time { font-size: 11px; opacity: .9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.tl-now { position: absolute; left: 40px; right: 0; height: 2px; background: var(--warn); pointer-events: none; }
+.tl-now::before { content: ''; position: absolute; left: -4px; top: -4px; width: 10px; height: 10px; border-radius: 50%; background: var(--warn); }

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { addDays, longDate, mondayOf } from '../../shared/dates';
 import { put } from '../api';
-import { CalendarError, EventLine, EventModal, eventsOn, useEvents, type CalEvent } from '../components/calendar';
+import { CalendarError, DayTimeline, EventLine, EventModal, eventsOn, useEvents, type CalEvent } from '../components/calendar';
 import { GoalPanel } from '../components/GoalPanel';
 import { NotionPicker } from '../components/NotionPicker';
 import { EmptyTaskSlot, MightList, TaskRow, type Task } from '../components/TaskRow';
@@ -22,6 +22,8 @@ function DayView({ date }: { date: string }) {
   const [form, setForm] = useState<{ focus: string; memo: string; goods: string[] } | null>(null);
   const save = useAutosave((v: any) => put(`/days/${date}`, v), 1000, `/api/days/${date}`, `fj.draft.day.${date}`);
   const swipe = useRef(0);
+  const cal = useEvents(date, addDays(date, 1));
+  const [editEvent, setEditEvent] = useState<{ event?: CalEvent; date: string; time?: string } | null>(null);
 
   useEffect(() => {
     if (data && !form) {
@@ -97,6 +99,15 @@ function DayView({ date }: { date: string }) {
 
       <div className="day-grid">
         <aside className="day-aside">
+          <section className="card timeline-card desktop-only no-swipe">
+            <div className="card-head">
+              <h2 className="card-title">1日の予定</h2>
+              <button className="btn btn-small" onClick={() => setEditEvent({ date })}>＋ 追加</button>
+            </div>
+            {cal.error ? <CalendarError message={cal.error} /> : cal.data ? (
+              <DayTimeline date={date} today={today} events={cal.data} onEdit={(e) => setEditEvent({ event: e, date })} onCreate={(time) => setEditEvent({ date, time })} />
+            ) : <p className="muted small">読み込み中…</p>}
+          </section>
           <details className="card goals-card" open={goalsOpen} onToggle={(e) => setGoalsOpen((e.target as HTMLDetailsElement).open)}>
             <summary>
               <span className="card-title">今タームの目標</span>
@@ -107,7 +118,7 @@ function DayView({ date }: { date: string }) {
         </aside>
 
         <div className="day-main">
-          <ScheduleCard date={date} />
+          <ScheduleCard date={date} today={today} cal={cal} onEdit={setEditEvent} />
 
           <section className="card">
             <div className="card-head">
@@ -192,41 +203,59 @@ function DayView({ date }: { date: string }) {
       </div>
 
       {picker && <NotionPicker date={date} onClose={() => setPicker(false)} onPicked={reload} />}
+      {editEvent && <EventModal date={editEvent.date} event={editEvent.event} time={editEvent.time} onClose={() => setEditEvent(null)} onSaved={cal.reload} />}
     </div>
   );
 }
 
-function ScheduleCard({ date }: { date: string }) {
+function ScheduleCard({ date, today, cal, onEdit }: {
+  date: string;
+  today: string;
+  cal: ReturnType<typeof useEvents>;
+  onEdit: (v: { event?: CalEvent; date: string; time?: string }) => void;
+}) {
   const tomorrow = addDays(date, 1);
-  const { data, error, reload } = useEvents(date, tomorrow);
-  const [edit, setEdit] = useState<{ event?: CalEvent; date: string } | null>(null);
+  const { data, error } = cal;
+  const [timeline, setTimeline] = useLocalFlag('fj.scheduleTimeline', false);
   const todays = data ? eventsOn(data, date) : [];
   const tomorrows = data ? eventsOn(data, tomorrow) : [];
   return (
     <section className="card no-swipe">
       <div className="card-head">
         <h2 className="card-title">今日のスケジュール</h2>
-        <button className="btn btn-small" onClick={() => setEdit({ date })}>＋ 予定を追加</button>
+        <span className="row">
+          <span className="seg mobile-only" role="group" aria-label="表示">
+            <button type="button" className={timeline ? '' : 'active'} onClick={() => setTimeline(false)}>リスト</button>
+            <button type="button" className={timeline ? 'active' : ''} onClick={() => setTimeline(true)}>時間割</button>
+          </span>
+          <button className="btn btn-small" onClick={() => onEdit({ date })}>＋ 予定を追加</button>
+        </span>
       </div>
       {error && <CalendarError message={error} />}
       {!data && !error && <p className="muted small">読み込み中…</p>}
-      {data && todays.length === 0 && <p className="muted">予定はありません</p>}
-      <div className="events">
-        {todays.map((e) => (
-          <EventLine key={e.calendarId + e.id} e={e} date={date} onClick={() => setEdit({ event: e, date })} />
-        ))}
+      {data && timeline && (
+        <div className="mobile-only">
+          <DayTimeline date={date} today={today} events={data} onEdit={(e) => onEdit({ event: e, date })} onCreate={(time) => onEdit({ date, time })} />
+        </div>
+      )}
+      <div className={timeline ? 'desktop-block' : ''}>
+        {data && todays.length === 0 && <p className="muted">予定はありません</p>}
+        <div className="events">
+          {todays.map((e) => (
+            <EventLine key={e.calendarId + e.id} e={e} date={date} onClick={() => onEdit({ event: e, date })} />
+          ))}
+        </div>
       </div>
       {data && (
         <details className="tomorrow">
           <summary>明日の予定（{tomorrows.length}件）</summary>
           <div className="events">
             {tomorrows.map((e) => (
-              <EventLine key={e.calendarId + e.id} e={e} date={tomorrow} onClick={() => setEdit({ event: e, date: tomorrow })} />
+              <EventLine key={e.calendarId + e.id} e={e} date={tomorrow} onClick={() => onEdit({ event: e, date: tomorrow })} />
             ))}
           </div>
         </details>
       )}
-      {edit && <EventModal date={edit.date} event={edit.event} onClose={() => setEdit(null)} onSaved={reload} />}
     </section>
   );
 }
