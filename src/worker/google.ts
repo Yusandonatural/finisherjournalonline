@@ -16,8 +16,8 @@ async function accessToken(env: Env, userId: string): Promise<string> {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
-      client_id: env.GOOGLE_CLIENT_ID!,
-      client_secret: env.GOOGLE_CLIENT_SECRET!,
+      client_id: env.GOOGLE_CLIENT_ID!.trim(),
+      client_secret: env.GOOGLE_CLIENT_SECRET!.trim(),
       refresh_token: refresh,
       grant_type: 'refresh_token',
     }),

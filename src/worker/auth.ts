@@ -78,7 +78,7 @@ authRoutes.get('/auth/google', (c) => {
   setCookie(c, STATE_COOKIE, state, { httpOnly: true, secure: !isLocal(c.req.url), sameSite: 'Lax', path: '/auth', maxAge: 600 });
   const origin = new URL(c.req.url).origin;
   const q = new URLSearchParams({
-    client_id: c.env.GOOGLE_CLIENT_ID,
+    client_id: c.env.GOOGLE_CLIENT_ID.trim(),
     redirect_uri: `${origin}/auth/callback`,
     response_type: 'code',
     scope: GOOGLE_SCOPES.join(' '),
@@ -104,8 +104,8 @@ authRoutes.get('/auth/callback', async (c) => {
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
       code,
-      client_id: c.env.GOOGLE_CLIENT_ID!,
-      client_secret: c.env.GOOGLE_CLIENT_SECRET!,
+      client_id: c.env.GOOGLE_CLIENT_ID!.trim(),
+      client_secret: c.env.GOOGLE_CLIENT_SECRET!.trim(),
       redirect_uri: `${url.origin}/auth/callback`,
       grant_type: 'authorization_code',
     }),

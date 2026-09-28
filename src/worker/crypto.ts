@@ -10,7 +10,7 @@ function unb64(s: string): Uint8Array<ArrayBuffer> {
 }
 
 async function key(secret: string): Promise<CryptoKey> {
-  const raw = unb64(secret);
+  const raw = unb64(secret.trim());
   if (raw.length !== 32) throw new Error('TOKEN_ENC_KEY は 32バイトの base64 にしてください');
   return crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['encrypt', 'decrypt']);
 }
