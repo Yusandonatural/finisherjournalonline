@@ -604,3 +604,74 @@ input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline
   .card { padding: 16px 16px; }
   .card-title { font-size: 17px; }
 }
+
+/* ===== 今タームの目標の帯（日々の入力の上に常に表示） ===== */
+.goal-strip {
+  position: sticky; top: calc(var(--topbar-h, 64px) + 8px); z-index: 12;
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--line); border-radius: var(--radius);
+  box-shadow: var(--shadow-lift);
+  padding: 12px 16px; display: flex; flex-direction: column; gap: 8px;
+  max-height: calc(100vh - var(--topbar-h, 64px) - 32px); overflow-y: auto;
+}
+.gs-vision { display: flex; align-items: baseline; gap: 8px; padding-bottom: 8px; border-bottom: 1px dashed var(--rule); color: var(--ink); text-decoration: none !important; }
+.gs-vision-label { flex: none; font-size: 11px; font-weight: 700; letter-spacing: .12em; color: var(--accent-ink); background: var(--accent); padding: 1px 8px; border-radius: 999px; }
+.gs-vision-text { font-family: var(--serif); font-weight: 600; font-size: 14px; letter-spacing: .03em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gs-head { display: flex; align-items: center; gap: 10px; }
+.gs-label { font-family: var(--serif); font-weight: 700; font-size: 15px; letter-spacing: .06em; }
+.gs-elapsed { font-size: 12px; color: var(--gold); font-weight: 700; }
+.gs-toggle { border: 0; background: none; color: var(--accent); font-weight: 700; font-size: 13px; padding: 2px 4px; }
+.gs-empty { margin: 0; font-size: 13px; color: var(--muted); }
+.gs-projects { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.gs-projects li { display: grid; grid-template-columns: minmax(0, 1fr) minmax(60px, 28%) auto; align-items: center; gap: 10px; font-size: 13.5px; }
+.gs-title { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gs-bar { height: 5px; border-radius: 999px; background: var(--rule); overflow: hidden; }
+.gs-bar > span { display: block; height: 100%; border-radius: inherit; background: var(--accent); }
+.gs-projects li.behind .gs-bar > span { background: var(--warn); }
+.gs-projects li.behind .gs-title { color: var(--warn); }
+.gs-pct { font-family: var(--serif); font-weight: 700; font-size: 13px; font-variant-numeric: tabular-nums; white-space: nowrap; min-width: 3.2em; text-align: right; }
+.gs-habits { display: flex; align-items: center; gap: 6px; overflow-x: auto; scrollbar-width: none; padding-top: 2px; }
+.gs-habits::-webkit-scrollbar { display: none; }
+.gs-habits-count { flex: none; font-size: 12px; font-weight: 700; color: var(--muted); }
+.gs-habit { flex: none; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 999px; padding: 3px 12px; font-size: 12.5px; white-space: nowrap; transition: background .15s; }
+.gs-habit.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.gs-habit.off-day:not(.on) { opacity: .55; }
+.gs-habit:disabled { cursor: default; }
+.gs-detail { max-height: 60vh; overflow-y: auto; }
+@media (max-width: 760px) {
+  .goal-strip { top: calc(var(--topbar-h, 56px) + 6px); padding: 10px 12px; border-radius: 14px; }
+  .gs-projects li { grid-template-columns: minmax(0, 1fr) 56px auto; gap: 8px; font-size: 13px; }
+}
+
+/* ===== 人生の目標 ===== */
+.life-hero { text-align: center; padding: 8px 0 4px; }
+.life-hero .page-title { font-size: 28px; letter-spacing: .06em; margin: 4px 0 8px; }
+.life-hero p { margin: 0 auto; max-width: 36em; }
+.life-eyebrow { color: var(--gold) !important; font-weight: 700; letter-spacing: .2em; font-size: 12px; }
+.vision-card { background: linear-gradient(180deg, var(--surface), color-mix(in srgb, var(--gold-soft) 45%, var(--surface))); }
+.vision-input { border: 0; border-bottom: 1px solid var(--rule); border-radius: 0; background: transparent; font-family: var(--serif); font-weight: 700; font-size: 22px; line-height: 1.6; letter-spacing: .04em; text-align: center; padding: 8px 4px; }
+.vision-input:focus { outline: none; border-bottom-color: var(--accent); }
+.life-list { list-style: none; margin: 0; padding: 0; }
+.life-item { padding: 12px 0; border-bottom: 1px solid var(--rule); }
+.life-item:last-child { border-bottom: 0; }
+.life-row { display: flex; align-items: center; gap: 8px; }
+.life-main { flex: 1; min-width: 0; }
+.life-title { border-color: transparent; background: transparent; font-family: var(--serif); font-weight: 700; font-size: 17px; padding: 4px 6px; }
+.life-title:hover { border-color: var(--line); }
+.life-item.achieved .life-title { color: var(--muted); text-decoration: line-through; }
+.life-meta { display: flex; gap: 4px; flex-wrap: wrap; padding-left: 6px; }
+.life-meta .chip:first-child { margin-left: 0; }
+.life-note { margin: 4px 0 0 34px; font-size: 13px; color: var(--muted); white-space: pre-wrap; }
+.life-detail { margin: 10px 0 0 30px; }
+.life-add select { width: auto; flex: none; }
+@media (max-width: 760px) { .life-hero .page-title { font-size: 22px; } .vision-input { font-size: 18px; } .life-detail, .life-note { margin-left: 0; } }
+@media (max-width: 760px) {
+  .life-row { flex-wrap: wrap; row-gap: 0; }
+  .life-main { flex: 1 1 calc(100% - 40px); }
+  .life-row > .icon-btn:first-of-type { margin-left: auto; }
+  .life-row > .icon-btn, .life-row > .btn { order: 2; }
+  .life-add { flex-wrap: wrap; }
+  .life-add input { flex: 1 1 100%; order: -1; }
+  .life-add select, .life-add .btn { flex: 1; }
+}

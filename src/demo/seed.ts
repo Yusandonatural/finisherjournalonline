@@ -30,7 +30,14 @@ export function seedData(run: Run) {
   const id = () => Math.floor(r() * 1e16).toString(16) + Math.floor(r() * 1e16).toString(16);
 
   run('INSERT INTO users (id, email, name) VALUES (?, ?, ?)', [DEMO_USER.id, DEMO_USER.email, DEMO_USER.name]);
-  run('INSERT INTO user_settings (user_id, calendar_ids_json) VALUES (?, ?)', [DEMO_USER.id, '["primary","yusando"]']);
+  run('INSERT INTO user_settings (user_id, calendar_ids_json, life_vision) VALUES (?, ?, ?)', [DEMO_USER.id, '["primary","yusando"]', '自然と共に生き、自然茶の豊かさを世界に届ける']);
+  [
+    ['自然茶を世界20か国に届ける', '仕事', 2035],
+    ['日本自然茶協会を全国の仲間とつくる', '仕事', 2030],
+    ['家族と毎年、長い旅に出る', '家族', null],
+    ['フランス語と中国語で茶を語れるようになる', '学び', 2030],
+    ['自分の手で建てた茶室でお茶会をひらく', '暮らし', 2032],
+  ].forEach(([t, c, y], i) => run('INSERT INTO life_goals (id, user_id, title, category, target_year, sort_order) VALUES (?, ?, ?, ?, ?, ?)', [`lg${i}`, DEMO_USER.id, t, c, y, i]));
 
   for (const term of [prev, cur]) {
     const tid = id();

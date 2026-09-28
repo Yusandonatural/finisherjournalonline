@@ -5,14 +5,16 @@ import { addDays, todayJST } from '../shared/dates';
 import { HttpError, type AppEnv, type Env } from '../worker/env';
 import { dayRoutes } from '../worker/routes/days';
 import { integrationRoutes } from '../worker/routes/integrations';
+import { lifeRoutes } from '../worker/routes/life';
 import { termRoutes } from '../worker/routes/terms';
 import m1 from '../../migrations/0001_init.sql?raw';
 import m2 from '../../migrations/0002_metrics_obstacle_might.sql?raw';
+import m3 from '../../migrations/0003_life_goals.sql?raw';
 import { seedCalendar, seedData, DEMO_USER } from './seed';
 
 declare const initSqlJs: (opts?: unknown) => Promise<any>;
 
-const DB_KEY = 'fj.demo.db.v1';
+const DB_KEY = 'fj.demo.db.v2';
 const CAL_KEY = 'fj.demo.cal.v1';
 
 const store = {
@@ -104,6 +106,7 @@ export async function startDemo() {
     db = new SQL.Database();
     db.exec(m1);
     db.exec(m2);
+    db.exec(m3);
     db.exec('BEGIN');
     seedData((sql: string, p: unknown[] = []) => db.run(sql, p.map(norm)));
     db.exec('COMMIT');
@@ -198,6 +201,7 @@ export async function startDemo() {
   app.route('/api', termRoutes);
   app.route('/api', dayRoutes);
   app.route('/api', integrationRoutes);
+  app.route('/api', lifeRoutes);
 
   const ctx = { waitUntil: (p: Promise<unknown>) => void p.catch(() => {}), passThroughOnException() {}, props: {} };
   const origFetch = window.fetch.bind(window);

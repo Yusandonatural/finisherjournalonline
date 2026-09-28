@@ -4,6 +4,7 @@ import { HttpError, type AppEnv, type Env } from './env';
 import { syncAll } from './notion';
 import { dayRoutes } from './routes/days';
 import { integrationRoutes } from './routes/integrations';
+import { lifeRoutes } from './routes/life';
 import { termRoutes } from './routes/terms';
 import { markMissed } from './tasks';
 
@@ -20,6 +21,7 @@ app.use('/api/*', requireUser);
 app.route('/api', termRoutes);
 app.route('/api', dayRoutes);
 app.route('/api', integrationRoutes);
+app.route('/api', lifeRoutes);
 app.all('/api/*', (c) => c.json({ error: 'not found' }, 404));
 
 export default {

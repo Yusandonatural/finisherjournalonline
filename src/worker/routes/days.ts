@@ -6,6 +6,7 @@ import { HttpError, type AppEnv } from '../env';
 import { archivePage, notionEnabled, pickFromNotion, pushDirty } from '../notion';
 import { fillRate, goalsWithProgress, groupByGoal, tasksInRange, termForDate, withInfo } from '../stats';
 import { createTask, markMissed, nextMightPosition, nextPosition } from '../tasks';
+import { lifeSummary } from './life';
 
 export const dayRoutes = new Hono<AppEnv>();
 
@@ -47,6 +48,7 @@ dayRoutes.get('/days/:date', async (c) => {
     },
     tasks,
     might: await tasksInRange(c.env.DB, u.id, date, date, 'might'),
+    life: await lifeSummary(c.env.DB, u.id),
     goals: term ? await goalsWithProgress(c.env.DB, term, date) : [],
     termStats: taskStats(termTasks),
     notionEnabled: notionEnabled(c.env),

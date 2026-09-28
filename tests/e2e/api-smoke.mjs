@@ -106,6 +106,21 @@ ok(day.tasks.length === 1 && day.tasks[0].title === '本を読む' && day.might.
 await req('POST', `/api/tasks/${m1.id}/demote`);
 day = await req('GET', `/api/days/2026-10-05`);
 ok(day.tasks.length === 0 && day.might.length === 2, 'demote moves it back');
+// 人生の目標
+await req('PUT', '/api/life', { vision: '自然と共に生き、自然茶を世界に届ける' });
+const lg1 = await req('POST', '/api/life/goals', { title: '自然茶を世界20か国に届ける', category: '仕事' });
+const lg2 = await req('POST', '/api/life/goals', { title: '茶室を建てる' });
+await req('PATCH', `/api/life/goals/${lg2.id}`, { target_year: 2032, note: '自分の手で' });
+await req('POST', `/api/life/goals/${lg2.id}/move`, { dir: -1 });
+let life = await req('GET', '/api/life');
+ok(life.vision.startsWith('自然と共に') && life.goals[0].id === lg2.id && life.goals[0].target_year === 2032, 'life vision and goals saved and reordered');
+await req('PATCH', `/api/life/goals/${lg1.id}`, { achieved: true });
+life = await req('GET', '/api/life');
+ok(life.goals[life.goals.length - 1].id === lg1.id && life.goals[life.goals.length - 1].achieved_at, 'achieved life goal moves to the end');
+day = await req('GET', '/api/days/2026-10-05');
+ok(day.life.vision.startsWith('自然と共に'), 'day page includes the life vision');
+await req('DELETE', `/api/life/goals/${lg1.id}`);
+ok((await req('GET', '/api/life')).goals.length === 1, 'life goal deleted');
 // notion disabled path
 const ns = await req('GET', '/api/notion/status'); ok(ns.enabled === false, 'notion status when not configured');
 // calendar without google

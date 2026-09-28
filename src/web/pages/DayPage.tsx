@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { addDays, longDate, mondayOf } from '../../shared/dates';
 import { put } from '../api';
 import { CalendarError, DayTimeline, EventLine, EventModal, eventsOn, useEvents, type CalEvent } from '../components/calendar';
-import { GoalPanel } from '../components/GoalPanel';
+import { GoalPanel, GoalStrip } from '../components/GoalPanel';
 import { NotionPicker } from '../components/NotionPicker';
 import { EmptyTaskSlot, MightList, TaskRow, type Task } from '../components/TaskRow';
 import { ErrorBox, Loading, SaveBadge, pct } from '../components/ui';
@@ -113,7 +113,7 @@ function DayView({ date }: { date: string }) {
               <DayTimeline date={date} today={today} events={cal.data} onEdit={(e) => setEditEvent({ event: e, date })} onCreate={(time) => setEditEvent({ date, time })} />
             ) : <p className="muted small">読み込み中…</p>}
           </section>
-          <details className="card goals-card" open={goalsOpen} onToggle={(e) => setGoalsOpen((e.target as HTMLDetailsElement).open)}>
+          <details className="card goals-card desktop-only" open={goalsOpen} onToggle={(e) => setGoalsOpen((e.target as HTMLDetailsElement).open)}>
             <summary>
               <span className="card-title">今タームの目標</span>
               {info && <span className="muted small">経過 {info.elapsedPct}%</span>}
@@ -123,6 +123,15 @@ function DayView({ date }: { date: string }) {
         </aside>
 
         <div className="day-main">
+          <GoalStrip
+            goals={data.goals}
+            termId={term?.id}
+            date={date}
+            elapsedPct={info?.phase === 'active' ? info.elapsedPct : undefined}
+            vision={data.life?.vision}
+            onChange={() => { setData({ ...data }); reload(); }}
+            editable={!!term?.inTerm}
+          />
           <ScheduleCard date={date} today={today} cal={cal} onEdit={setEditEvent} />
 
           <section className="card">

@@ -109,3 +109,85 @@ export function MetricUpdate({ goal, onChange }: { goal: any; onChange: () => vo
     </div>
   );
 }
+
+/** 日々の入力の上に常に表示する、今タームの目標（と人生のビジョン）の帯 */
+export function GoalStrip({ goals, termId, date, elapsedPct, vision, onChange, editable }: {
+  goals: any[];
+  termId?: string;
+  date: string;
+  elapsedPct?: number;
+  vision?: string;
+  onChange: () => void;
+  editable: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const projects = goals.filter((g) => g.type === 'project');
+  const habits = goals.filter((g) => g.type === 'habit');
+  const doneHabits = habits.filter((h) => h.doneOnDate).length;
+
+  async function toggleHabit(g: any) {
+    g.doneOnDate = !g.doneOnDate;
+    onChange();
+    await put(`/goals/${g.id}/habit/${date}`, { done: g.doneOnDate });
+    onChange();
+  }
+
+  return (
+    <section className="goal-strip no-swipe" aria-label="今タームの目標">
+      {vision?.trim() && (
+        <Link to="/life" className="gs-vision" title="人生の目標を見る">
+          <span className="gs-vision-label">人生</span>
+          <span className="gs-vision-text">{vision}</span>
+        </Link>
+      )}
+      <div className="gs-head">
+        <span className="gs-label">今タームの目標</span>
+        {elapsedPct != null && <span className="gs-elapsed">経過 {elapsedPct}%</span>}
+        <span className="spacer" />
+        {goals.length > 0 && (
+          <button type="button" className="gs-toggle" aria-expanded={open} onClick={() => setOpen(!open)}>
+            {open ? '閉じる' : '詳しく'}
+          </button>
+        )}
+      </div>
+      {goals.length === 0 ? (
+        <p className="gs-empty">
+          目標がまだありません。{termId && <Link to={`/term/${termId}/goals`}>目標を立てる</Link>}
+        </p>
+      ) : open ? (
+        <div className="gs-detail">
+          <GoalPanel goals={goals} termId={termId} date={date} onChange={onChange} editable={editable} />
+        </div>
+      ) : (
+        <>
+          <ul className="gs-projects">
+            {projects.map((g) => (
+              <li key={g.id} className={g.behind ? 'behind' : ''}>
+                <span className="gs-title">{g.title}</span>
+                <span className="gs-bar" aria-hidden="true"><span style={{ width: `${g.progress}%` }} /></span>
+                <span className="gs-pct">{metricText(g) ?? `${g.progress}%`}</span>
+              </li>
+            ))}
+          </ul>
+          {habits.length > 0 && (
+            <div className="gs-habits" role="group" aria-label={`今日の習慣 ${doneHabits}/${habits.length}`}>
+              <span className="gs-habits-count">習慣 {doneHabits}/{habits.length}</span>
+              {habits.map((h) => (
+                <button
+                  key={h.id}
+                  type="button"
+                  className={`gs-habit ${h.doneOnDate ? 'on' : ''} ${h.scheduledOnDate === false ? 'off-day' : ''}`}
+                  aria-pressed={!!h.doneOnDate}
+                  disabled={!editable}
+                  onClick={() => toggleHabit(h)}
+                >
+                  {h.doneOnDate ? '✓ ' : ''}{h.title}
+                </button>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+    </section>
+  );
+}

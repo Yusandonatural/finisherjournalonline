@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { mondayOf, monthStart, todayJST } from '../../shared/dates';
 
@@ -11,11 +12,23 @@ export function Layout() {
     { to: `/week/${mondayOf(anchor)}`, match: '/week', label: '週間', icon: '週' },
     { to: `/month/${monthStart(anchor)}`, match: '/month', label: '月間', icon: '月' },
     { to: `/term?date=${anchor}`, match: '/term', label: '3ヶ月', icon: '期' },
+    { to: '/life', match: '/life', label: '人生', icon: '生' },
   ];
+  // 上のバーの高さを CSS に渡す（目標の帯をその下に貼り付けるため）
+  const bar = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const el = bar.current;
+    if (!el) return;
+    const set = () => document.documentElement.style.setProperty('--topbar-h', `${el.offsetHeight}px`);
+    set();
+    const ro = new ResizeObserver(set);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
   const active = (m: string) => pathname.startsWith(m) || (m === '/term' && pathname.startsWith('/terms'));
   return (
     <div className="app">
-      <header className="topbar">
+      <header className="topbar" ref={bar}>
         <NavLink to="/today" className="brand">
           <img className="brand-mark" src="/icon.svg" alt="" width="28" height="28" />
           <span className="brand-text">
