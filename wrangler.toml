@@ -1,4 +1,6 @@
 name = "finisher-journal"
+# Cloudflare のアカウント（秘密情報ではない）
+account_id = "f67f1a20dfa6ca21a2f21fb660aad45a"
 main = "src/worker/index.ts"
 compatibility_date = "2026-09-01"
 compatibility_flags = ["nodejs_compat"]

@@ -103,14 +103,13 @@ yusando.com の DNS は Route 53 にあるため、Workers のカスタムドメ
 ## 自動デプロイ（GitHub Actions）
 
 `main` と `claude/confident-newton-rvehln` に push すると、型チェックと単体テストのあと、D1 のマイグレーションを当てて本番にデプロイします（`.github/workflows/deploy.yml`）。
-最初に一度だけ、GitHub のリポジトリに次の2つのシークレットを登録します（Settings → Secrets and variables → Actions → New repository secret）。
+最初に一度だけ、GitHub のリポジトリに次のシークレットを登録します（Settings → Secrets and variables → Actions → New repository secret）。
 
 | 名前 | 値 |
 |---|---|
 | `CLOUDFLARE_API_TOKEN` | Cloudflare の「My Profile → API Tokens → Create Token」で、テンプレート「Edit Cloudflare Workers」を選び、権限に「Account → D1 → Edit」を追加して作ったトークン |
-| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare ダッシュボードの「Workers & Pages」右側に表示される Account ID |
 
-未登録のあいだは、テストだけ実行してデプロイはスキップします。手動で実行するときは Actions タブの「Deploy」→「Run workflow」。
+アカウント ID は `wrangler.toml` に書いてあります。未登録のあいだは、テストだけ実行してデプロイはスキップします。手動で実行するときは Actions タブの「Deploy」→「Run workflow」。
 
 ## テスト
 
