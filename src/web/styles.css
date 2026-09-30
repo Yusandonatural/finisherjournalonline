@@ -675,3 +675,6 @@ input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline
   .life-add input { flex: 1 1 100%; order: -1; }
   .life-add select, .life-add .btn { flex: 1; }
 }
+
+/* 一言日記: 数行で書ける高さに */
+.memo { min-height: 104px; }

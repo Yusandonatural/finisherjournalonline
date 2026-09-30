@@ -205,8 +205,8 @@ function DayView({ date }: { date: string }) {
           </section>
 
           <section className="card">
-            <h2 className="card-title">メモ</h2>
-            <textarea className="memo" rows={5} value={form.memo} placeholder="自由に" onChange={(e) => update({ memo: e.target.value })} />
+            <h2 className="card-title">一言日記</h2>
+            <textarea className="memo" rows={3} value={form.memo} placeholder="今日をひとことで" aria-label="一言日記" onChange={(e) => update({ memo: e.target.value })} />
           </section>
 
           <div className="complete-bar">

@@ -33,12 +33,12 @@ await page.waitForSelector('text=今日やるべきこと');
 ok(await page.getByPlaceholder('ひとつだけ').inputValue() === '内装業者に連絡する', 'focus autosaves');
 ok(await page.getByPlaceholder('良かったこと 1').inputValue() === '朝日がきれいだった', 'good things autosave');
 // 入力直後にページを離れても保存される（sendBeacon）
-await page.getByPlaceholder('自由に').fill('離れる直前のメモ');
+await page.getByPlaceholder('今日をひとことで').fill('離れる直前のメモ');
 await page.goto(B + '/settings');
 await page.waitForTimeout(500);
 await page.goto(B + '/day/' + D);
 await page.waitForSelector('.habit-list');
-ok(await page.getByPlaceholder('自由に').inputValue() === '離れる直前のメモ', 'text typed right before leaving is still there when coming back');
+ok(await page.getByPlaceholder('今日をひとことで').inputValue() === '離れる直前のメモ', 'text typed right before leaving is still there when coming back');
 await page.waitForTimeout(1500);
 const saved = await (await page.request.get(B + '/api/days/' + D)).json();
 ok(saved.entry.memo === '離れる直前のメモ', '...and it is saved to the server');
