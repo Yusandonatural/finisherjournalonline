@@ -273,6 +273,13 @@ Todo リストには「Inbox／今月対応予定／今週の対応事項／未�
 
 習慣目標・良かったこと・一言日記は Notion に送らない（フェーズ2で「良かったこと」の同期を検討）。
 
+### 語学アプリとの連動（90日フランス語・中国語）
+
+- 目標ごとに `link_source`（`lang:fr`／`lang:zh`）を選べる。習慣目標は語学アプリで学習した（XP が付いた）日に ✓ を足す（消さない）。プロジェクト目標はクリアした Day 数 ÷ 90 を `manual_progress` に入れる。
+- 語学アプリの記録は Firebase（プロジェクト french90days）の Firestore `progress/{uid}`・`progress-zh/{uid}`。ジャーナルのメールアドレスで Firebase のユーザーを探して読む（サービスアカウントの鍵 `FIREBASE_SERVICE_ACCOUNT`）。
+- 15分ごとの定期処理・連動を選んだとき・設定画面の「今すぐ反映」で動く。対象は進行中のタームと、終わって7日以内のターム。
+- 計算は `src/shared/langs.ts`、読み込みは `src/worker/firebase.ts`、書き込みは `src/worker/langlink.ts`。
+
 ## 8. 画面一覧とタブ
 
 上部（スマホは下部）に「今日／週間／月間／3ヶ月」のタブと設定を置く。週間・月間・3ヶ月のタブは**いま見ている日付に連動**する（11月の週を見ながら「月間」を押すと11月が開く）。各タブの中に、さらに小さなタブを置く。
@@ -324,6 +331,7 @@ goals            (id, term_id, type 'project'|'habit', title, why, sort_order, d
                   metric_unit, metric_start, metric_current, metric_target, obstacle, obstacle_plan)
 milestones       (id, goal_id, title, done, done_at, sort_order)
 habit_logs       (goal_id, date, done)                       -- 主キー (goal_id, date)
+-- goals.link_source: 語学アプリとの連動（'lang:fr' | 'lang:zh' | NULL）、user_settings.lang_sync_at / lang_sync_error: 最終反映
 
 daily_entries    (id, user_id, date, focus, memo, goods_json, completed, created_at, updated_at)  -- (user_id, date) 一意
 tasks            (id, user_id, date, position, title, kind 'must'|'might',  -- must の position 1〜3 が本枠、4 以上は Notion から入った別枠
@@ -348,6 +356,8 @@ sync_state       (key, value)                                -- Notion 取り込
 | PATCH/DELETE | `/api/goals/:id` | 更新／削除 |
 | POST/PATCH/DELETE | `/api/goals/:id/milestones[/:mid]` | マイルストーン |
 | PUT | `/api/goals/:id/habit/:date` | その日の習慣チェック（done: true/false） |
+| GET | `/api/langs/status` | 語学アプリとの連動の状態（設定済みか・最終反映・エラー・連動中の目標） |
+| POST | `/api/langs/sync` | 語学アプリの記録を今すぐ反映 |
 | GET/PUT | `/api/days/:date` | デイリーページの取得／保存（タスク・良かったこと含む） |
 | GET/PUT | `/api/periods/week/:monday`、`/api/periods/month/:first` | 週間・月間の予定とレビュー（日ごとの要約、達成率と前期比、習慣、目標、良かったこと一覧を含む） |
 | GET | `/api/terms/current?date=` | その日のターム |

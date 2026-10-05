@@ -1,9 +1,12 @@
 import { Hono } from 'hono';
 import { isDate } from '../../shared/dates';
-import { one, run } from '../db';
+import { all, one, run } from '../db';
 import { HttpError, type AppEnv } from '../env';
 import { createEvent, deleteEvent, listCalendars, listEvents, updateEvent, type EventInput } from '../google';
 import * as notion from '../notion';
+import { LANG_SOURCES } from '../../shared/langs';
+import { firebaseEnabled } from '../firebase';
+import { syncLangLinks } from '../langlink';
 
 export const integrationRoutes = new Hono<AppEnv>();
 
@@ -40,6 +43,30 @@ integrationRoutes.put('/settings', async (c) => {
     await run(c.env.DB, 'UPDATE user_settings SET missed_cutoff = ? WHERE user_id = ?', b.missedCutoff, u.id);
   }
   return c.json(await settings(c.env.DB, u.id));
+});
+
+// ---- 語学アプリとの連動 ----
+integrationRoutes.get('/langs/status', async (c) => {
+  const u = c.get('user');
+  const s = await one(c.env.DB, 'SELECT lang_sync_at, lang_sync_error FROM user_settings WHERE user_id = ?', u.id);
+  const linked = await all(
+    c.env.DB,
+    `SELECT g.id, g.title, g.type, g.link_source FROM goals g JOIN terms t ON t.id = g.term_id
+     WHERE t.user_id = ? AND g.link_source IS NOT NULL ORDER BY t.start_date DESC, g.sort_order`,
+    u.id,
+  );
+  return c.json({
+    enabled: firebaseEnabled(c.env),
+    sources: Object.values(LANG_SOURCES).map(({ id, label }) => ({ id, label })),
+    lastSync: s?.lang_sync_at ?? null,
+    error: s?.lang_sync_error ?? null,
+    linked,
+  });
+});
+
+integrationRoutes.post('/langs/sync', async (c) => {
+  if (!firebaseEnabled(c.env)) throw new HttpError(400, '語学アプリとの連動が設定されていません（FIREBASE_SERVICE_ACCOUNT）');
+  return c.json(await syncLangLinks(c.env, c.get('user').id));
 });
 
 // ---- Googleカレンダー ----

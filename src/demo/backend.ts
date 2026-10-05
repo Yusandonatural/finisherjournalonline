@@ -10,6 +10,7 @@ import { termRoutes } from '../worker/routes/terms';
 import m1 from '../../migrations/0001_init.sql?raw';
 import m2 from '../../migrations/0002_metrics_obstacle_might.sql?raw';
 import m3 from '../../migrations/0003_life_goals.sql?raw';
+import m4 from '../../migrations/0004_lang_link.sql?raw';
 import { seedCalendar, seedData, DEMO_USER } from './seed';
 
 declare const initSqlJs: (opts?: unknown) => Promise<any>;
@@ -98,6 +99,7 @@ export async function startDemo() {
   if (saved) {
     try {
       db = new SQL.Database(Uint8Array.from(atob(saved), (c) => c.charCodeAt(0)));
+      try { db.exec(m4); } catch { /* 追加済み */ }
     } catch {
       db = null;
     }
@@ -107,6 +109,7 @@ export async function startDemo() {
     db.exec(m1);
     db.exec(m2);
     db.exec(m3);
+    db.exec(m4);
     db.exec('BEGIN');
     seedData((sql: string, p: unknown[] = []) => db.run(sql, p.map(norm)));
     db.exec('COMMIT');

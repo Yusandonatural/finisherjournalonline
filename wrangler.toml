@@ -33,6 +33,8 @@ ALLOWED_EMAILS = "isozaki@yusando.com"
 NOTION_TASKS_DB_ID = "6ecc0a27e7af4782be9c2b022a75b0e8"
 NOTION_JOURNAL_TAG = "目標達成ジャーナル"
 NOTION_ASSIGNEE = "礒﨑遼太郎"
+# 語学アプリ（90日フランス語・中国語）の Firebase プロジェクト。記録を読むには秘密情報 FIREBASE_SERVICE_ACCOUNT が要る
+FIREBASE_PROJECT_ID = "french90days"
 
 # 秘密情報は `npx wrangler secret put <NAME>` で登録する:
-#   GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET / TOKEN_ENC_KEY / NOTION_TOKEN
+#   GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET / TOKEN_ENC_KEY / NOTION_TOKEN / FIREBASE_SERVICE_ACCOUNT

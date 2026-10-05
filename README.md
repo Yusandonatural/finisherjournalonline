@@ -84,6 +84,24 @@ npx wrangler secret put NOTION_TOKEN
 アプリが読み書きするのはタグ「目標達成ジャーナル」が付いた行だけです。
 アプリで作ったタスクは「できた」にしたものだけが、完了の記録として Todo リストに追加されます。
 
+### 3.5 語学アプリとの連動（90日フランス語・中国語）
+
+目標の「詳細」で連動させる語学アプリを選ぶと、語学アプリの学習記録が自動で反映されます（15分ごと・連動を選んだとき・設定画面の「今すぐ反映」）。
+
+- 習慣目標：語学アプリで学習した（XP が付いた）日に ✓（手で付けた ✓ や外した日は消しません）
+- プロジェクト目標：語学アプリでクリアした Day 数 ÷ 90 が進捗（マイルストーンや数値目標がない場合）
+
+語学アプリの記録は Firebase プロジェクト `french90days` の Firestore（フランス語 `progress/{uid}`・中国語 `progress-zh/{uid}`）にあり、
+ジャーナルのアカウントと同じメールアドレスの Google アカウントで語学アプリにログインしていれば結びつきます。読むためにサービスアカウントの鍵を1回だけ登録します。
+
+1. Firebase コンソール → プロジェクト french90days → ⚙ プロジェクトの設定 → **サービス アカウント** → 「**新しい秘密鍵を生成**」→ JSON ファイルが保存される。
+2. その JSON の中身を、秘密情報 `FIREBASE_SERVICE_ACCOUNT` として登録する（どちらか）。
+   - Cloudflare ダッシュボード → Workers & Pages → finisher-journal → 設定 → 変数とシークレット → 追加（種類「シークレット」、名前 `FIREBASE_SERVICE_ACCOUNT`、値に JSON の中身をすべて貼る）
+   - または `npx wrangler secret put FIREBASE_SERVICE_ACCOUNT` を実行して JSON の中身を貼る
+3. 保存した JSON ファイルは削除する（鍵は Firebase の管理者権限を持つので、ほかに置かない）。
+
+プロジェクト ID は `wrangler.toml` の `FIREBASE_PROJECT_ID`。鍵が未登録のあいだは、設定画面に「未設定」と出るだけで、ほかの動きは変わりません。
+
 ### 4. URL（ドメイン）
 
 `wrangler.toml` の `APP_URL`（Notion に書くリンク）と、ログイン画面の canonical・OGP は `https://journal.yusando.com` を前提にしています。
@@ -131,6 +149,14 @@ npx wrangler dev --port 8788 --persist-to .wrangler/notion-test \
   --var NOTION_TOKEN:test --var NOTION_API_BASE:http://127.0.0.1:9999 &
 npx wrangler d1 migrations apply finisher-journal --local --persist-to .wrangler/notion-test
 node tests/e2e/notion-sync.mjs
+
+# 語学アプリとの連動（Firebase エミュレーターを使う）
+npx firebase-tools emulators:start --only auth,firestore --project demo-french &
+npx wrangler d1 migrations apply finisher-journal --local --persist-to .wrangler/lang-test
+npx wrangler dev --port 8789 --persist-to .wrangler/lang-test --test-scheduled --var DEV_LOGIN:true \
+  --var FIREBASE_PROJECT_ID:demo-french --var FIRESTORE_API_BASE:http://127.0.0.1:8085 \
+  --var FIREBASE_AUTH_API_BASE:http://127.0.0.1:9099/identitytoolkit.googleapis.com &
+node tests/e2e/lang-link.mjs
 
 # 画面操作（playwright-core が必要）
 node tests/e2e/ui.mjs 2026-10-15
