@@ -6,6 +6,7 @@ import { dayRoutes } from './routes/days';
 import { integrationRoutes } from './routes/integrations';
 import { lifeRoutes } from './routes/life';
 import { termRoutes } from './routes/terms';
+import { syncLangLinks } from './langlink';
 import { markMissed } from './tasks';
 
 const app = new Hono<AppEnv>();
@@ -31,6 +32,7 @@ export default {
       (async () => {
         await markMissed(env);
         await syncAll(env).catch((e) => console.error('notion sync', e));
+        await syncLangLinks(env).catch((e) => console.error('lang sync', e));
       })(),
     );
   },

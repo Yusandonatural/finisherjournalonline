@@ -5,6 +5,8 @@ import { all, one, ownGoal, ownTask, ownTerm, patch, run, uid } from '../db';
 import { HttpError, type AppEnv } from '../env';
 import { byWeekday, fillRate, goalsWithProgress, groupByGoal, tasksInRange, termForDate, withInfo } from '../stats';
 import { markMissed } from '../tasks';
+import { LANG_SOURCES } from '../../shared/langs';
+import { syncLangLinks } from '../langlink';
 
 export const termRoutes = new Hono<AppEnv>();
 
@@ -57,10 +59,10 @@ termRoutes.post('/terms', async (c) => {
     await run(
       c.env.DB,
       `INSERT INTO goals (id, term_id, type, title, why, sort_order, manual_progress, habit_frequency, habit_times_per_week, habit_weekdays_json,
-         metric_unit, metric_start, metric_current, metric_target, obstacle, obstacle_plan)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         metric_unit, metric_start, metric_current, metric_target, obstacle, obstacle_plan, link_source)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       nid, id, g.type, g.title, g.why, order++, g.manual_progress, g.habit_frequency, g.habit_times_per_week, g.habit_weekdays_json,
-      g.metric_unit, g.metric_current ?? g.metric_start, g.metric_current ?? g.metric_start, g.metric_target, g.obstacle, g.obstacle_plan,
+      g.metric_unit, g.metric_current ?? g.metric_start, g.metric_current ?? g.metric_start, g.metric_target, g.obstacle, g.obstacle_plan, g.link_source ?? null,
     );
     const ms = await all(c.env.DB, 'SELECT * FROM milestones WHERE goal_id = ? AND done = 0 ORDER BY sort_order', g.id);
     for (const [i, m] of ms.entries()) {
@@ -115,6 +117,11 @@ function goalFields(b: any) {
   for (const k of ['metric_start', 'metric_current', 'metric_target']) if (k in b) f[k] = num(b[k]);
   if ('obstacle' in b) f.obstacle = str(b.obstacle, 1000);
   if ('obstacle_plan' in b) f.obstacle_plan = str(b.obstacle_plan, 1000);
+  // 語学アプリとの連動：空なら解除、知らない値は無視
+  if ('link_source' in b) {
+    if (b.link_source == null || b.link_source === '') f.link_source = null;
+    else if (typeof b.link_source === 'string' && LANG_SOURCES[b.link_source]) f.link_source = b.link_source;
+  }
   if ('habit_weekdays' in b && Array.isArray(b.habit_weekdays)) f.habit_weekdays_json = JSON.stringify(b.habit_weekdays.filter((n: any) => Number.isInteger(n) && n >= 0 && n <= 6));
   return f;
 }
@@ -134,10 +141,13 @@ termRoutes.post('/terms/:id/goals', async (c) => {
 });
 
 termRoutes.patch('/goals/:id', async (c) => {
-  const g = await ownGoal(c.env.DB, c.get('user').id, c.req.param('id'));
+  const u = c.get('user');
+  const g = await ownGoal(c.env.DB, u.id, c.req.param('id'));
   const f = goalFields(await c.req.json());
   await patch(c.env.DB, 'goals', g.id, f, Object.keys(f));
   if ('title' in f) await run(c.env.DB, 'UPDATE tasks SET notion_dirty = 1 WHERE goal_id = ?', g.id);
+  // 語学アプリと連動させたら、すぐに記録を反映する
+  if (f.link_source) await syncLangLinks(c.env, u.id).catch((e) => console.error('lang sync', e));
   return c.json({ ok: true });
 });
 

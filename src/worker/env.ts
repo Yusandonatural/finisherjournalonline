@@ -13,6 +13,13 @@ export interface Env {
   NOTION_TOKEN?: string;
   /** テスト用: Notion API の接続先を差し替える */
   NOTION_API_BASE?: string;
+  /** 語学アプリ（Firebase プロジェクト）の ID */
+  FIREBASE_PROJECT_ID?: string;
+  /** 語学アプリの記録を読むためのサービスアカウントの鍵（JSON そのまま） */
+  FIREBASE_SERVICE_ACCOUNT?: string;
+  /** テスト用: Firebase エミュレーターの接続先 */
+  FIREBASE_AUTH_API_BASE?: string;
+  FIRESTORE_API_BASE?: string;
   DEV_LOGIN?: string;
 }
 

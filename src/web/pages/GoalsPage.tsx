@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { shortDate } from '../../shared/dates';
+import { LANG_SOURCES } from '../../shared/langs';
 import { del, patch, post } from '../api';
 import { TermHeader } from '../components/TermHeader';
 import { ErrorBox, Loading, Progress, metricText } from '../components/ui';
@@ -127,6 +128,9 @@ function GoalEditor({ goal, first, last, onChange }: { goal: any; first: boolean
         <button className="btn btn-small btn-ghost" onClick={() => setOpen(!open)} aria-expanded={open}>{open ? '閉じる' : '詳細'}</button>
       </div>
       <Progress value={goal.progress} tone={goal.behind ? 'warn' : undefined} />
+      {goal.link_source && LANG_SOURCES[goal.link_source] && (
+        <p className="muted small goal-sub"><span>🔗 {LANG_SOURCES[goal.link_source].label}と連動{goal.type === 'habit' ? '（学習した日に自動で ✓）' : '（クリアした Day 数 ÷ 90）'}</span></p>
+      )}
       {(metricText(goal) || goal.obstacle) && (
         <p className="muted small goal-sub">
           {metricText(goal) && <span>数値目標 {metricText(goal)}</span>}
@@ -184,6 +188,16 @@ function GoalEditor({ goal, first, last, onChange }: { goal: any; first: boolean
             </fieldset>
           )}
           <label>
+            語学アプリと連動
+            <select value={goal.link_source ?? ''} onChange={(e) => save({ link_source: e.target.value || null })}>
+              <option value="">連動しない</option>
+              {Object.values(LANG_SOURCES).map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
+            </select>
+            <span className="muted small">
+              {goal.type === 'habit' ? 'その語学アプリで学習した（XP が付いた）日に、自動で ✓ が付きます。' : 'その語学アプリでクリアした Day 数 ÷ 90 が進捗になります（マイルストーンや数値目標がない場合）。'}
+            </span>
+          </label>
+          <label>
             大きな障害（うまくいかなくなるとしたら何が原因か）
             <textarea rows={2} value={f.obstacle} onChange={(e) => setF({ ...f, obstacle: e.target.value })} onBlur={blurSave('obstacle')} />
           </label>
@@ -197,7 +211,7 @@ function GoalEditor({ goal, first, last, onChange }: { goal: any; first: boolean
                 期限
                 <input type="date" value={goal.due_date ?? ''} onChange={(e) => save({ due_date: e.target.value || null })} />
               </label>
-              {goal.milestones.length === 0 && goal.metric_target == null && (
+              {goal.milestones.length === 0 && goal.metric_target == null && !goal.link_source && (
                 <label>
                   進捗（手動） {goal.manual_progress ?? 0}%
                   <input type="range" min={0} max={100} step={5} defaultValue={goal.manual_progress ?? 0} onMouseUp={(e) => save({ manual_progress: Number((e.target as HTMLInputElement).value) })} onTouchEnd={(e) => save({ manual_progress: Number((e.target as HTMLInputElement).value) })} />

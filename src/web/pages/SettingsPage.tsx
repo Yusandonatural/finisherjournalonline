@@ -7,6 +7,9 @@ export function SettingsPage() {
   const demo = !!(window as any).__FJ_DEMO;
   const me = useApi<any>('/me');
   const notion = useApi<any>('/notion/status');
+  const langs = useApi<any>('/langs/status');
+  const [langMsg, setLangMsg] = useState<string | null>(null);
+  const [langBusy, setLangBusy] = useState(false);
   const [cals, setCals] = useState<any[] | null>(null);
   const [calErr, setCalErr] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
@@ -40,6 +43,19 @@ export function SettingsPage() {
     }
     setSyncing(false);
     notion.reload();
+  }
+
+  async function syncLangs() {
+    setLangBusy(true);
+    setLangMsg(null);
+    try {
+      const r = await post('/langs/sync');
+      setLangMsg(r.errors.length ? r.errors.join('\n') : `反映しました（目標 ${r.goals}件・学習した日 ${r.checked}日）`);
+    } catch (e: any) {
+      setLangMsg(e.message);
+    }
+    setLangBusy(false);
+    langs.reload();
   }
 
   return (
@@ -93,6 +109,31 @@ export function SettingsPage() {
             <span>{label}</span>
           </label>
         ))}
+      </section>
+
+      <section className="card">
+        <h2 className="card-title">語学アプリとの連動</h2>
+        <p className="small">
+          90日フランス語・中国語（90日外国語会話）の学習記録を、目標に自動で反映します。目標の「詳細」で連動させる語学アプリを選んでください。<br />
+          習慣目標 → その日に学習した（XP が付いた）日に ✓ ／ プロジェクト目標 → クリアした Day 数 ÷ 90 を進捗に
+        </p>
+        {langs.error ? (
+          <div className="notice">{demo ? 'デモ版では語学アプリとの連動は動きません。' : langs.error}</div>
+        ) : !langs.data ? (
+          <Loading />
+        ) : !langs.data.enabled ? (
+          <div className="notice">語学アプリとの連動が未設定です。サーバーに FIREBASE_SERVICE_ACCOUNT（Firebase のサービスアカウントの鍵）を登録してください（README の手順）。</div>
+        ) : (
+          <>
+            <p className="muted small">
+              語学アプリには、このアカウントと同じ Google アカウント（{me.data.user.email}）でログインしてください。15分ごとに自動で反映します。<br />
+              最終反映: {langs.data.lastSync ? new Date(langs.data.lastSync).toLocaleString('ja-JP') : 'まだ'} ・ 連動中の目標 {langs.data.linked.length}件
+            </p>
+            {langs.data.error && <p className="error-text small" style={{ whiteSpace: 'pre-line' }}>{langs.data.error}</p>}
+            <button className="btn btn-primary" onClick={syncLangs} disabled={langBusy}>{langBusy ? '反映中…' : '今すぐ反映'}</button>
+            {langMsg && <p className="muted small" style={{ whiteSpace: 'pre-line' }}>{langMsg}</p>}
+          </>
+        )}
       </section>
 
       <section className="card">
