@@ -678,3 +678,24 @@ input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline
 
 /* 一言日記: 数行で書ける高さに */
 .memo { min-height: 104px; }
+
+/* 月間: 日付へ移動（小さなカレンダー） */
+.date-jump { padding-bottom: 14px; }
+.dj-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; max-width: 420px; margin: 0 auto; }
+.dj-wd { text-align: center; font-size: 11px; font-weight: 700; color: var(--muted); padding-bottom: 2px; }
+.dj-wd.sun, .dj-cell.sun .dj-num { color: var(--warn); }
+.dj-wd.sat, .dj-cell.sat .dj-num { color: #4a6f9a; }
+.dj-cell { position: relative; display: grid; place-items: center; aspect-ratio: 1; max-height: 52px; border-radius: 12px; color: var(--ink); text-decoration: none !important; font-family: var(--serif); font-weight: 700; font-size: 15px; transition: background .15s; }
+.dj-cell:hover { background: var(--surface-2); }
+.dj-cell.filled { background: var(--accent-soft); }
+.dj-cell.today { box-shadow: inset 0 0 0 2px var(--accent); }
+.dj-cell.out { visibility: hidden; }
+.dj-mark { position: absolute; bottom: 5px; left: 50%; width: 5px; height: 5px; margin-left: -2.5px; border-radius: 50%; background: var(--todo); }
+.dj-mark.all { background: var(--good); }
+.dj-mark.some, .dot.dj-some { background: var(--gold); }
+.dj-legend { display: inline-block; width: 12px; height: 12px; border-radius: 4px; vertical-align: -1px; }
+.dj-legend.filled { background: var(--accent-soft); }
+.date-jump .legend { justify-content: center; }
+/* 大きな月間カレンダーも、マスを押すとその日へ */
+.month-cell.clickable { cursor: pointer; transition: background .15s; }
+.month-cell.clickable:hover { background: var(--surface-2); }

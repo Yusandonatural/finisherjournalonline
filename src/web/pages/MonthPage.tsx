@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { addDays, daysInRange, mondayOf, monthStart, shortDate, todayJST, WEEKDAYS_JA, weekday } from '../../shared/dates';
 import { CalendarError, EventModal, eventsOn, eventTime, useEvents, type CalEvent } from '../components/calendar';
 import { ByGoalTable, DoneMissedLists, GoalProgressList, GoodsList, PeriodStats, PlanEditor, ReviewForm, useNote } from '../components/period';
@@ -43,6 +43,8 @@ function MonthView({ data, tab, reload }: { data: any; tab: 'plan' | 'review'; r
         {start !== thisMonth && <Link className="btn btn-small" to={`/month/${thisMonth}${suffix}`}>今月へ</Link>}
         <SaveBadge state={save.state} />
       </div>
+
+      <DateJump data={data} today={today} />
 
       {tab === 'plan' ? (
         <>
@@ -116,6 +118,7 @@ function MonthGrid({ data, today }: { data: any; today: string }) {
   const { data: events, error, reload } = useEvents(data.start, data.end);
   const [edit, setEdit] = useState<{ event?: CalEvent; date: string } | null>(null);
   const byDate = new Map(data.days.map((d: any) => [d.date, d]));
+  const nav = useNavigate();
   return (
     <section className="card">
       <h2 className="card-title">月間スケジュール</h2>
@@ -130,7 +133,16 @@ function MonthGrid({ data, today }: { data: any; today: string }) {
           const evs = events ? eventsOn(events, date) : [];
           const tasks = d.tasks.filter((t: any) => t.status !== 'dropped');
           return (
-            <div key={date} className={`month-cell ${date === today ? 'today' : ''} ${d.completed ? 'filled' : ''}`} role="gridcell">
+            <div
+              key={date}
+              className={`month-cell clickable ${date === today ? 'today' : ''} ${d.completed ? 'filled' : ''}`}
+              role="gridcell"
+              onClick={(e) => {
+                // 予定や「＋」を押したときはその操作を優先し、それ以外はその日のページへ
+                if ((e.target as HTMLElement).closest('button, a')) return;
+                nav(`/day/${date}`);
+              }}
+            >
               <div className="month-cell-head">
                 <Link to={`/day/${date}`} className={`month-num ${weekday(date) === 0 ? 'sun' : weekday(date) === 6 ? 'sat' : ''}`} aria-label={`${shortDate(date)}（${WEEKDAYS_JA[weekday(date)]}）のページ`}>
                   {Number(date.slice(8))}
@@ -188,5 +200,46 @@ function WeeksList({ weeks, review }: { weeks: any[]; review?: boolean }) {
         </tbody>
       </table>
     </section>
+  );
+}
+
+/** 日付を押すとその日のページへ飛ぶ、小さなカレンダー */
+function DateJump({ data, today }: { data: any; today: string }) {
+  const gridStart = mondayOf(data.start);
+  const gridEnd = addDays(mondayOf(data.end), 6);
+  const byDate = new Map(data.days.map((d: any) => [d.date, d]));
+  return (
+    <nav className="card date-jump" aria-label="日付をえらんでその日のページへ">
+      <div className="card-head">
+        <h2 className="card-title">日付へ移動</h2>
+        <Link className="btn btn-small" to={`/day/${today}`}>今日</Link>
+      </div>
+      <div className="dj-grid">
+        {['月', '火', '水', '木', '金', '土', '日'].map((w, i) => (
+          <span key={w} className={`dj-wd ${i === 5 ? 'sat' : i === 6 ? 'sun' : ''}`}>{w}</span>
+        ))}
+        {daysInRange(gridStart, gridEnd).map((date) => {
+          const d: any = byDate.get(date);
+          if (!d) return <span key={date} className="dj-cell out" aria-hidden="true" />;
+          const tasks = d.tasks.filter((t: any) => t.status !== 'dropped' && t.status !== 'carried');
+          const done = tasks.filter((t: any) => t.status === 'done').length;
+          const w = weekday(date);
+          return (
+            <Link
+              key={date}
+              to={`/day/${date}`}
+              className={`dj-cell ${date === today ? 'today' : ''} ${d.completed ? 'filled' : ''} ${w === 0 ? 'sun' : w === 6 ? 'sat' : ''}`}
+              aria-label={`${shortDate(date)}（${WEEKDAYS_JA[w]}）${d.completed ? ' 記入済み' : ''}${tasks.length ? ` タスク ${done}/${tasks.length}` : ''}`}
+            >
+              <span className="dj-num">{Number(date.slice(8))}</span>
+              {tasks.length > 0 && <span className={`dj-mark ${done === tasks.length ? 'all' : done > 0 ? 'some' : 'none'}`} aria-hidden="true" />}
+            </Link>
+          );
+        })}
+      </div>
+      <p className="legend muted small">
+        <span className="dj-legend filled" /> 記入済み <span className="dot status-done" /> タスク全部できた <span className="dot dj-some" /> 一部できた
+      </p>
+    </nav>
   );
 }
