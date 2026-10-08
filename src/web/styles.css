@@ -699,3 +699,50 @@ input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline
 /* 大きな月間カレンダーも、マスを押すとその日へ */
 .month-cell.clickable { cursor: pointer; transition: background .15s; }
 .month-cell.clickable:hover { background: var(--surface-2); }
+
+/* ロックイン（デイリーページ） */
+.lockin-card { border-top: 3px solid var(--gold); }
+.lockin-countdown { font-size: 13px; color: var(--gold); font-weight: 700; white-space: nowrap; }
+.lockin-countdown strong { font-family: var(--serif); font-size: 20px; margin: 0 2px; }
+.lockin-rules { list-style: none; margin: 4px 0 0; padding: 0; }
+.lockin-rules > li { padding: 8px 0; border-bottom: 1px dashed var(--line); }
+.lockin-rules > li:last-child { border-bottom: 0; }
+.lockin-rules > li.kept .check span, .rule-title.done-mark { color: var(--good); font-weight: 700; }
+.minute-rule .row { flex-wrap: wrap; }
+.minute-bar { height: 6px; border-radius: 999px; background: var(--surface-2); margin: 6px 0; overflow: hidden; }
+.minute-bar span { display: block; height: 100%; background: var(--accent); border-radius: inherit; transition: width .25s; }
+.minute-add { display: flex; flex-wrap: wrap; gap: 4px; }
+.min-input { width: 4.2em !important; display: inline-block; padding: 2px 6px !important; text-align: right; margin: 0 4px; font-variant-numeric: tabular-nums; }
+.lockin-event { margin-top: 12px; padding: 10px 12px; border-radius: 12px; background: var(--surface-2); }
+.lockin-event-body { padding: 6px 0 0 30px; }
+.small-input { width: 100%; font-size: 14px; padding: 6px 8px; margin-bottom: 4px; }
+.lockin-prev { margin-top: 12px; padding: 10px 12px; border-radius: 12px; background: var(--gold-soft); }
+.lockin-prev p { margin: 0 0 6px; }
+.seg-label { align-self: center; padding: 0 8px 0 4px; color: var(--ink); }
+.lockin-metric { margin: 14px 0 0; }
+.lockin-card .notice { margin: 6px 0 4px; }
+
+/* ロックイン（3ヶ月 → ロックイン） */
+.lockin-intro { text-align: left; }
+.lockin-headline { font-family: var(--serif); font-size: 24px; margin: 4px 0 10px; letter-spacing: .04em; }
+.lockin-intro-list { padding-left: 1.3em; line-height: 1.8; margin: 0 0 18px; }
+.lockin-intro-list li { margin-bottom: 6px; }
+.tenx-card { border-top: 3px solid var(--gold); }
+.card.pending { border-left: 3px solid var(--gold); }
+.step-mark { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid var(--line); color: var(--muted); font-size: 12px; margin-right: 4px; vertical-align: 2px; font-family: var(--sans); }
+.step-mark.ok { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.hierarchy .tier { position: relative; padding: 4px 0 12px 18px; border-left: 2px solid var(--line); margin-left: 6px; }
+.hierarchy .tier::before { content: ''; position: absolute; left: -6px; top: 9px; width: 10px; height: 10px; border-radius: 50%; background: var(--gold); }
+.hierarchy .tier:last-child { padding-bottom: 0; }
+.tier-label { font-weight: 700; margin: 0 0 6px; display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.tier-label a { font-weight: 500; }
+.rule-list { list-style: none; margin: 0 0 12px; padding: 0; }
+.rule-list > li { padding: 10px 0; border-bottom: 1px dashed var(--line); }
+.rule-list .row { flex-wrap: wrap; }
+.heatmap.compact { margin-top: 6px; }
+.heatmap.compact .heat { width: 10px; height: 10px; border-radius: 2px; }
+.metric-log li { font-size: 14px; }
+@media (max-width: 760px) {
+  .lockin-headline { font-size: 20px; }
+  .lockin-event-body { padding-left: 0; }
+}

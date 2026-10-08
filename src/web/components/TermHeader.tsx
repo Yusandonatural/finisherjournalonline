@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { shortDate } from '../../shared/dates';
 import { SubTabs } from './ui';
 
-export function TermHeader({ term, tab }: { term: any; tab: 'progress' | 'tasks' | 'review' | 'goals' }) {
+export function TermHeader({ term, tab }: { term: any; tab: 'progress' | 'tasks' | 'review' | 'goals' | 'lockin' }) {
   const info = term.info;
   const base = `/term/${term.id}`;
   return (
@@ -27,6 +27,7 @@ export function TermHeader({ term, tab }: { term: any; tab: 'progress' | 'tasks'
             { to: `${base}/tasks`, label: 'タスク台帳', active: tab === 'tasks' },
             { to: `${base}/review`, label: '総括', active: tab === 'review' },
             { to: `${base}/goals`, label: '目標設定', active: tab === 'goals' },
+            { to: `${base}/lockin`, label: term.lockin ? 'ロックイン中' : 'ロックイン', active: tab === 'lockin' },
           ]}
         />
         <span className="spacer" />

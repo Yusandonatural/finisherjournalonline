@@ -7,6 +7,8 @@ import { archivePage, notionEnabled, pickFromNotion, pushDirty } from '../notion
 import { fillRate, goalsWithProgress, groupByGoal, tasksInRange, termForDate, withInfo } from '../stats';
 import { createTask, markMissed, nextMightPosition, nextPosition } from '../tasks';
 import { lifeSummary } from './life';
+import { lockinForDay, writeRuleLog } from './lockin';
+import { parseEvent } from '../../shared/lockin';
 
 export const dayRoutes = new Hono<AppEnv>();
 
@@ -52,6 +54,7 @@ dayRoutes.get('/days/:date', async (c) => {
     goals: term ? await goalsWithProgress(c.env.DB, term, date) : [],
     termStats: taskStats(termTasks),
     notionEnabled: notionEnabled(c.env),
+    lockin: inTerm ? await lockinForDay(c.env.DB, u.id, term, date) : null,
   });
 });
 
@@ -66,6 +69,22 @@ dayRoutes.on(['PUT', 'POST'], '/days/:date', async (c) => {
   if ('memo' in b) f.memo = str(b.memo, 20000);
   if ('goods' in b && Array.isArray(b.goods)) f.goods_json = JSON.stringify([0, 1, 2].map((i) => str(b.goods[i], 300)));
   if ('completed' in b) f.completed = b.completed ? 1 : 0;
+  // ロックイン：イベントの日の例外モードと、その日の進み具合
+  if ('event_day' in b) f.event_day = b.event_day ? 1 : 0;
+  if ('progress_metric' in b) f.progress_metric = str(b.progress_metric, 300);
+  if (b.event && typeof b.event === 'object') {
+    const cur = await one(c.env.DB, 'SELECT event_json FROM daily_entries WHERE user_id = ? AND date = ?', u.id, date);
+    const ev = { ...parseEvent(cur?.event_json) };
+    if ('title' in b.event) ev.title = str(b.event.title, 100);
+    for (const k of ['noAlcohol', 'morningWork', 'nextDayOnTime'] as const) if (k in b.event) ev[k] = !!b.event[k];
+    f.event_json = JSON.stringify(ev);
+    // 「お酒を飲まなかった」は禁酒ルールの記録にもそのまま入れる
+    if ('noAlcohol' in b.event) {
+      const term = await termForDate(c.env.DB, u.id, date);
+      const rule = term?.lockin ? await one(c.env.DB, "SELECT * FROM lockin_rules WHERE term_id = ? AND rule_key = 'alcohol'", term.id) : null;
+      if (rule) await writeRuleLog(c.env.DB, rule, date, { done: !!b.event.noAlcohol });
+    }
+  }
   const keys = Object.keys(f);
   if (keys.length) {
     await run(

@@ -458,3 +458,20 @@ sync_state       (key, value)                                -- Notion 取り込
 - 「詳しく」でマイルストーンまで開ける。スマホでは長い目標カードの代わりにこの帯を使う
 
 データ: `life_goals`（id, user_id, title, note, category, target_year, sort_order, achieved_at）、`user_settings.life_vision`（マイグレーション 0003）
+
+## 15. グレート・ロックイン（v0.7）
+
+タームごとに切り替える集中モード。3ヶ月 → 「ロックイン」タブで「このタームをロックインにする」を押すと有効になる。
+
+| 機能 | 中身 |
+|---|---|
+| 毎日のルール | 共通3つ（運動30分・瞑想15分〈分けてOK〉・禁酒）は外せない。分の目安だけ変えられる。自分のルールは1〜3つ、全部で6つまで（サーバー側で上限を止める）。「分」のルールは足し算で記録し、目安に届いたら守れた扱い |
+| 10倍目標から逆算 | 1年後の10倍目標 → 90日の目標（プロジェクト目標）→ 今週の目標（週間予定）→ 今日のタスク → 進み具合（毎日の「今日の進み具合」）を1画面に階段で表示 |
+| イベントモード | 今日のページで切り替え。「飲まない・午前中は作業・翌朝は定刻」の3つをチェック。3つ目は翌日のページでも答えられる。「飲まない」は禁酒ルールの記録にも入る |
+| Day 0 基地づくり | 誘惑の断捨離・視覚の最適化・瞑想／作業エリアの6項目 |
+| 90日目のイベント | 名前・日付・申し込みの証拠。今日のページに残り日数を表示 |
+
+準備（10倍目標・90日の目標・自分のルール・Day 0・90日目のイベント）の5つがそろうまで、今日のページに「準備する」案内が出る。
+
+- DB: `migrations/0005_lockin.sql`（terms に lockin ほか、lockin_rules・lockin_logs、daily_entries に event_day・event_json・progress_metric）
+- API: `GET/PUT /api/terms/:id/lockin`、`POST /api/terms/:id/lockin/rules`、`PATCH/DELETE /api/lockin/rules/:id`、`PUT /api/days/:date/lockin/:ruleId`（value・add・done）。`GET /api/days/:date` に `lockin` を追加

@@ -4,6 +4,7 @@ import { addDays, longDate, mondayOf } from '../../shared/dates';
 import { put } from '../api';
 import { CalendarError, DayTimeline, EventLine, EventModal, eventsOn, useEvents, type CalEvent } from '../components/calendar';
 import { GoalPanel, GoalStrip } from '../components/GoalPanel';
+import { LockinCard } from '../components/LockinCard';
 import { NotionPicker } from '../components/NotionPicker';
 import { EmptyTaskSlot, MightList, TaskRow, type Task } from '../components/TaskRow';
 import { ErrorBox, Loading, SaveBadge, pct } from '../components/ui';
@@ -19,7 +20,7 @@ function DayView({ date }: { date: string }) {
   const { data, error, reload, setData } = useApi<any>(`/days/${date}`);
   const [goalsOpen, setGoalsOpen] = useLocalFlag('fj.goalsOpen', true);
   const [picker, setPicker] = useState(false);
-  const [form, setForm] = useState<{ focus: string; memo: string; goods: string[] } | null>(null);
+  const [form, setForm] = useState<{ focus: string; memo: string; goods: string[]; progress_metric: string } | null>(null);
   const save = useAutosave((v: any) => put(`/days/${date}`, v), 1000, `/api/days/${date}`, `fj.draft.day.${date}`);
   const swipe = useRef(0);
   const cal = useEvents(date, addDays(date, 1));
@@ -28,7 +29,7 @@ function DayView({ date }: { date: string }) {
   useEffect(() => {
     if (data && !form) {
       const draft = save.takeDraft() ?? {};
-      setForm({ focus: data.entry.focus, memo: data.entry.memo, goods: data.entry.goods, ...draft });
+      setForm({ focus: data.entry.focus, memo: data.entry.memo, goods: data.entry.goods, progress_metric: data.lockin?.progress_metric ?? '', ...draft });
     }
   }, [data, form, save]);
 
@@ -132,6 +133,15 @@ function DayView({ date }: { date: string }) {
             onChange={() => { setData({ ...data }); reload(); }}
             editable={!!term?.inTerm}
           />
+          {data.lockin && term && (
+            <LockinCard
+              date={date}
+              termId={term.id}
+              data={data.lockin}
+              progress={form.progress_metric}
+              onProgress={(v) => update({ progress_metric: v })}
+            />
+          )}
           <ScheduleCard date={date} today={today} cal={cal} onEdit={setEditEvent} />
 
           <section className="card">

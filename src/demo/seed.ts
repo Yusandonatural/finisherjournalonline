@@ -123,6 +123,38 @@ export function seedData(run: Run) {
       );
       run('INSERT INTO daily_entries (id, user_id, date, focus, goods_json) VALUES (?, ?, ?, ?, ?)', [id(), DEMO_USER.id, today, '内装の段取りを決めきる', JSON.stringify(['朝の茶畑がきれいだった', '', ''])]);
 
+      // ロックイン: 10倍目標・90日目のイベント・Day 0（1つだけ残す）・ルールと記録
+      run(
+        `UPDATE terms SET lockin = 1, tenx_goal = ?, commit_title = ?, commit_date = ?, commit_proof = ?, setup_json = ? WHERE id = ?`,
+        ['自然茶の年間売上を10倍にする（海外の卸先を10か国に）', '古民家カフェのグランドオープン', term.end, '告知ページ公開済み・招待状100通発送',
+          JSON.stringify({ alcohol: true, temptations: true, phone: true, desk: true, cushion: true, green: false }), tid],
+      );
+      const rules: [string, string | null, string, string, number, string, number][] = [
+        [id(), 'exercise', 'common', '運動', 30, 'min', 0.8],
+        [id(), 'meditation', 'common', '瞑想', 15, 'min', 0.75],
+        [id(), 'alcohol', 'common', '禁酒', 1, 'check', 0.95],
+        [id(), null, 'custom', '朝5時に起きる', 1, 'check', 0.7],
+        [id(), null, 'custom', 'SNSは夜20時以降だけ', 1, 'check', 0.65],
+      ];
+      rules.forEach(([rid, key, cat, title, target, unit, p], i) => {
+        run('INSERT INTO lockin_rules (id, term_id, category, rule_key, title, target_value, unit, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [rid, tid, cat, key, title, target, unit, i]);
+        for (const d of daysInRange(term.start, until)) {
+          const ok = r() < p;
+          const value = unit === 'min' ? (ok ? target + Math.floor(r() * 15) : Math.floor(r() * target)) : 0;
+          run('INSERT INTO lockin_logs (rule_id, date, value, done) VALUES (?, ?, ?, ?)', [rid, d, value, ok ? 1 : 0]);
+        }
+        if (key === 'meditation') run('INSERT INTO lockin_logs (rule_id, date, value, done) VALUES (?, ?, 10, 0)', [rid, today]);
+        if (key === 'exercise') run('INSERT INTO lockin_logs (rule_id, date, value, done) VALUES (?, ?, 30, 1)', [rid, today]);
+      });
+      const metrics = ['動画 1本 編集', '原稿 2,400字', '見積もり 3社', '試作 4品', '動画 2本 撮影', '申請書 2枚'];
+      daysInRange(addDays(today, -6), addDays(today, -1)).forEach((d, i) =>
+        run('UPDATE daily_entries SET progress_metric = ? WHERE user_id = ? AND date = ?', [metrics[i % metrics.length], DEMO_USER.id, d]),
+      );
+      const ev = addDays(today, -1);
+      run('UPDATE daily_entries SET event_day = 1, event_json = ? WHERE user_id = ? AND date = ?', [
+        JSON.stringify({ title: '卸先との会食', noAlcohol: true, morningWork: true }), DEMO_USER.id, ev,
+      ]);
+
       // 週と月の予定・レビュー
       const thisWeek = mondayOf(today);
       const lastWeek = addDays(thisWeek, -7);

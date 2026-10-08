@@ -7,6 +7,7 @@ import { Loading } from './components/ui';
 import { DayPage } from './pages/DayPage';
 import { GoalsPage } from './pages/GoalsPage';
 import { LifePage } from './pages/LifePage';
+import { LockinPage } from './pages/LockinPage';
 import { LedgerPage } from './pages/LedgerPage';
 import { MonthPage } from './pages/MonthPage';
 import { SettingsPage } from './pages/SettingsPage';
@@ -53,6 +54,7 @@ export function App() {
         <Route path="term/:id/tasks" element={<LedgerPage />} />
         <Route path="term/:id/review" element={<TermReviewPage />} />
         <Route path="term/:id/goals" element={<GoalsPage />} />
+        <Route path="term/:id/lockin" element={<LockinPage />} />
         <Route path="terms" element={<TermsPage />} />
         <Route path="life" element={<LifePage />} />
         <Route path="settings" element={<SettingsPage />} />

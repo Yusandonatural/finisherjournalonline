@@ -5,6 +5,7 @@ import { syncAll } from './notion';
 import { dayRoutes } from './routes/days';
 import { integrationRoutes } from './routes/integrations';
 import { lifeRoutes } from './routes/life';
+import { lockinRoutes } from './routes/lockin';
 import { termRoutes } from './routes/terms';
 import { syncLangLinks } from './langlink';
 import { markMissed } from './tasks';
@@ -23,6 +24,7 @@ app.route('/api', termRoutes);
 app.route('/api', dayRoutes);
 app.route('/api', integrationRoutes);
 app.route('/api', lifeRoutes);
+app.route('/api', lockinRoutes);
 app.all('/api/*', (c) => c.json({ error: 'not found' }, 404));
 
 export default {

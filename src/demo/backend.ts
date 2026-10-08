@@ -6,16 +6,18 @@ import { HttpError, type AppEnv, type Env } from '../worker/env';
 import { dayRoutes } from '../worker/routes/days';
 import { integrationRoutes } from '../worker/routes/integrations';
 import { lifeRoutes } from '../worker/routes/life';
+import { lockinRoutes } from '../worker/routes/lockin';
 import { termRoutes } from '../worker/routes/terms';
 import m1 from '../../migrations/0001_init.sql?raw';
 import m2 from '../../migrations/0002_metrics_obstacle_might.sql?raw';
 import m3 from '../../migrations/0003_life_goals.sql?raw';
 import m4 from '../../migrations/0004_lang_link.sql?raw';
+import m5 from '../../migrations/0005_lockin.sql?raw';
 import { seedCalendar, seedData, DEMO_USER } from './seed';
 
 declare const initSqlJs: (opts?: unknown) => Promise<any>;
 
-const DB_KEY = 'fj.demo.db.v2';
+const DB_KEY = 'fj.demo.db.v3';
 const CAL_KEY = 'fj.demo.cal.v1';
 
 const store = {
@@ -100,6 +102,7 @@ export async function startDemo() {
     try {
       db = new SQL.Database(Uint8Array.from(atob(saved), (c) => c.charCodeAt(0)));
       try { db.exec(m4); } catch { /* 追加済み */ }
+      try { db.exec(m5); } catch { /* 追加済み */ }
     } catch {
       db = null;
     }
@@ -110,6 +113,7 @@ export async function startDemo() {
     db.exec(m2);
     db.exec(m3);
     db.exec(m4);
+    db.exec(m5);
     db.exec('BEGIN');
     seedData((sql: string, p: unknown[] = []) => db.run(sql, p.map(norm)));
     db.exec('COMMIT');
@@ -205,6 +209,7 @@ export async function startDemo() {
   app.route('/api', dayRoutes);
   app.route('/api', integrationRoutes);
   app.route('/api', lifeRoutes);
+  app.route('/api', lockinRoutes);
 
   const ctx = { waitUntil: (p: Promise<unknown>) => void p.catch(() => {}), passThroughOnException() {}, props: {} };
   const origFetch = window.fetch.bind(window);
