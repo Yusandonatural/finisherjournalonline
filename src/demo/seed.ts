@@ -191,6 +191,9 @@ export function seedCalendar() {
   out.push({ id: `e${n++}`, calendarId: 'yusando', summary: '卸先と打ち合わせ', description: '新茶の数量について', location: 'HQ', allDay: false, start: t(today, '13:00'), end: t(today, '14:00') });
   out.push({ id: `e${n++}`, calendarId: 'yusando', summary: '古民家カフェ 内装の打ち合わせ', description: '', location: '古民家', allDay: false, start: t(addDays(today, 1), '10:00'), end: t(addDays(today, 1), '12:00') });
   out.push({ id: `e${n++}`, calendarId: 'yusando', summary: '製茶作業', description: '', location: '茶工場', allDay: true, start: addDays(today, 3), end: addDays(today, 5) });
+  out.push({ id: `e${n++}`, calendarId: 'events', summary: '自然茶の茶会（古民家）', description: '定員12名', location: '古民家', allDay: false, start: t(addDays(today, 2), '14:00'), end: t(addDays(today, 2), '16:00') });
+  out.push({ id: `e${n++}`, calendarId: 'events', summary: '茶摘み体験ツアー', description: '', location: '高尾の茶畑', allDay: false, start: t(addDays(today, 6), '10:00'), end: t(addDays(today, 6), '15:00') });
+  out.push({ id: `e${n++}`, calendarId: 'events', summary: 'マルシェ出店', description: '', location: '奈良公園', allDay: true, start: addDays(today, 9), end: addDays(today, 10) });
   out.push({ id: `e${n++}`, calendarId: 'primary', summary: 'サッカー（子ども）', description: '', location: '', allDay: false, start: t(addDays(today, 5), '09:00'), end: t(addDays(today, 5), '12:00') });
   return out;
 }

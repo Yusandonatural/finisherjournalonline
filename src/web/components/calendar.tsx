@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { addDays } from '../../shared/dates';
-import { api, del, patch, post } from '../api';
+import { api, del, patch, post, put } from '../api';
 import { useApi } from '../hooks';
 import { Modal } from './ui';
 
@@ -52,6 +52,82 @@ export function CalendarError({ message }: { message: string }) {
   return <div className="notice warn">予定を読み込めませんでした（{message}）</div>;
 }
 
+const LAST_CAL = 'fj.lastCalendar';
+const readLastCal = () => {
+  try {
+    return localStorage.getItem(LAST_CAL);
+  } catch {
+    return null;
+  }
+};
+
+/** 表示するカレンダーをその場で選ぶ（例: YUSANDO EVENTS だけ足す） */
+export function CalendarPicker({ onChange }: { onChange: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [cals, setCals] = useState<CalendarInfo[] | null>(null);
+  const [ids, setIds] = useState<string[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const box = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    Promise.all([api<CalendarInfo[]>('/calendar/calendars'), api<any>('/me')])
+      .then(([cs, me]) => {
+        const primary = cs.find((c) => c.primary)?.id;
+        setCals(cs);
+        setIds((me.settings.calendarIds as string[]).map((x) => (x === 'primary' && primary ? primary : x)));
+      })
+      .catch((e) => setError(e.message === 'google_reconnect' ? 'Googleカレンダーに接続されていません' : e.message));
+    const close = (e: MouseEvent) => box.current && !box.current.contains(e.target as Node) && setOpen(false);
+    const esc = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false);
+    document.addEventListener('mousedown', close);
+    document.addEventListener('keydown', esc);
+    return () => {
+      document.removeEventListener('mousedown', close);
+      document.removeEventListener('keydown', esc);
+    };
+  }, [open]);
+
+  async function toggle(id: string, on: boolean) {
+    const next = on ? [...new Set([...ids, id])] : ids.filter((x) => x !== id);
+    if (next.length === 0) return setError('1つは選んでください');
+    setIds(next);
+    setError(null);
+    try {
+      await put('/settings', { calendarIds: next });
+      onChange();
+    } catch (e: any) {
+      setError(e.message);
+    }
+  }
+
+  return (
+    <div className="cal-picker" ref={box}>
+      <button type="button" className="btn btn-small btn-ghost" aria-expanded={open} onClick={() => setOpen(!open)}>
+        カレンダー ▾
+      </button>
+      {open && (
+        <div className="cal-picker-panel" role="dialog" aria-label="表示するカレンダー">
+          <p className="muted small">表示するカレンダー</p>
+          {!cals && !error && <p className="muted small">読み込み中…</p>}
+          {cals?.map((c) => (
+            <label key={c.id} className="check">
+              <input type="checkbox" checked={ids.includes(c.id)} onChange={(e) => toggle(c.id, e.target.checked)} />
+              <span>
+                <span className="event-dot" style={{ background: c.color }} /> {c.summary}
+                {c.primary && <span className="muted small">（メイン）</span>}
+                {!c.writable && <span className="muted small">（閲覧のみ）</span>}
+              </span>
+            </label>
+          ))}
+          {error && <p className="form-error small">{error}</p>}
+          <p className="muted small">Googleカレンダーに表示されているものが並びます。見当たらないときは、Googleカレンダー側で「登録」してから開き直してください。</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 interface CalendarInfo {
   id: string;
   summary: string;
@@ -80,8 +156,11 @@ export function EventModal({ date, event, time, onClose, onSaved }: { date: stri
   useEffect(() => {
     api<CalendarInfo[]>('/calendar/calendars')
       .then((cs) => {
-        setCals(cs.filter((c) => c.writable));
-        const p = cs.find((c) => c.primary);
+        const ws = cs.filter((c) => c.writable);
+        setCals(ws);
+        // 新しい予定は、前回選んだカレンダー（なければメイン）に入れる
+        const last = readLastCal();
+        const p = ws.find((c) => c.id === last) ?? ws.find((c) => c.primary);
         if (!event && p) setF((x) => ({ ...x, calendarId: p.id }));
       })
       .catch(() => {});
@@ -96,7 +175,12 @@ export function EventModal({ date, event, time, onClose, onSaved }: { date: stri
     try {
       const body = { ...f, endDate: f.endDate < f.date ? f.date : f.endDate };
       if (event) await patch(`/calendar/events/${encodeURIComponent(event.calendarId)}/${encodeURIComponent(event.id)}`, body);
-      else await post('/calendar/events', body);
+      else {
+        await post('/calendar/events', body);
+        try {
+          localStorage.setItem(LAST_CAL, f.calendarId);
+        } catch {}
+      }
       onSaved();
       onClose();
     } catch (e: any) {
@@ -164,14 +248,15 @@ export function EventModal({ date, event, time, onClose, onSaved }: { date: stri
         </label>
         {!event && cals.length > 1 && (
           <label>
-            カレンダー
+            入れるカレンダー
             <select value={f.calendarId} onChange={(e) => set('calendarId', e.target.value)}>
               {cals.map((c) => (
-                <option key={c.id} value={c.id}>{c.summary}</option>
+                <option key={c.id} value={c.id}>{c.summary}{c.primary ? '（メイン）' : ''}</option>
               ))}
             </select>
           </label>
         )}
+        {event && <p className="muted small"><span className="event-dot" style={{ background: event.color }} /> {event.calendarName}</p>}
         {error && <p className="form-error">{error}</p>}
         <div className="form-actions">
           {event?.htmlLink && <a className="btn btn-ghost" href={event.htmlLink} target="_blank" rel="noreferrer">Googleで開く</a>}

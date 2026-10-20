@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { mondayOf, shortDate, todayJST, WEEKDAYS_JA, weekday } from '../../shared/dates';
 import { termInfo } from '../../shared/progress';
 import { put } from '../api';
-import { CalendarError, EventLine, EventModal, eventsOn, useEvents, type CalEvent } from '../components/calendar';
+import { CalendarError, CalendarPicker, EventLine, EventModal, eventsOn, useEvents, type CalEvent } from '../components/calendar';
 import { ByGoalTable, DoneMissedLists, GoalProgressList, GoodsList, HabitWeekTable, PeriodStats, PlanEditor, ReviewForm, StatusChip, useNote } from '../components/period';
 import { ErrorBox, Loading, SaveBadge, SubTabs } from '../components/ui';
 import { useApi } from '../hooks';
@@ -116,6 +116,7 @@ function WeekDays({ data, today }: { data: any; today: string }) {
     <section className="card">
       <div className="card-head">
         <h2 className="card-title">今週のスケジュールとタスク</h2>
+        <CalendarPicker onChange={reload} />
       </div>
       {error && <CalendarError message={error} />}
       <div className="week-grid">

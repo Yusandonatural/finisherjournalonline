@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { addDays, daysInRange, mondayOf, monthStart, shortDate, todayJST, WEEKDAYS_JA, weekday } from '../../shared/dates';
-import { CalendarError, EventModal, eventsOn, eventTime, useEvents, type CalEvent } from '../components/calendar';
+import { CalendarError, CalendarPicker, EventModal, eventsOn, eventTime, useEvents, type CalEvent } from '../components/calendar';
 import { ByGoalTable, DoneMissedLists, GoalProgressList, GoodsList, PeriodStats, PlanEditor, ReviewForm, useNote } from '../components/period';
 import { ErrorBox, Loading, SaveBadge, SubTabs, pct } from '../components/ui';
 import { useApi } from '../hooks';
@@ -121,7 +121,10 @@ function MonthGrid({ data, today }: { data: any; today: string }) {
   const nav = useNavigate();
   return (
     <section className="card">
-      <h2 className="card-title">月間スケジュール</h2>
+      <div className="card-head">
+        <h2 className="card-title">月間スケジュール</h2>
+        <CalendarPicker onChange={reload} />
+      </div>
       {error && <CalendarError message={error} />}
       <div className="month-grid" role="grid">
         {['月', '火', '水', '木', '金', '土', '日'].map((w) => (

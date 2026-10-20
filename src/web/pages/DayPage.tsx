@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { addDays, longDate, mondayOf } from '../../shared/dates';
 import { put } from '../api';
-import { CalendarError, DayTimeline, EventLine, EventModal, eventsOn, useEvents, type CalEvent } from '../components/calendar';
+import { CalendarError, CalendarPicker, DayTimeline, EventLine, EventModal, eventsOn, useEvents, type CalEvent } from '../components/calendar';
 import { GoalPanel, GoalStrip } from '../components/GoalPanel';
 import { LockinCard } from '../components/LockinCard';
 import { NotionPicker } from '../components/NotionPicker';
@@ -108,7 +108,10 @@ function DayView({ date }: { date: string }) {
           <section className="card timeline-card desktop-only no-swipe">
             <div className="card-head">
               <h2 className="card-title">1日の予定</h2>
-              <button className="btn btn-small" onClick={() => setEditEvent({ date })}>＋ 追加</button>
+              <span className="row">
+                <CalendarPicker onChange={cal.reload} />
+                <button className="btn btn-small" onClick={() => setEditEvent({ date })}>＋ 追加</button>
+              </span>
             </div>
             {cal.error ? <CalendarError message={cal.error} /> : cal.data ? (
               <DayTimeline date={date} today={today} events={cal.data} onEdit={(e) => setEditEvent({ event: e, date })} onCreate={(time) => setEditEvent({ date, time })} />
@@ -253,6 +256,7 @@ function ScheduleCard({ date, today, cal, onEdit }: {
             <button type="button" className={timeline ? '' : 'active'} onClick={() => setTimeline(false)}>リスト</button>
             <button type="button" className={timeline ? 'active' : ''} onClick={() => setTimeline(true)}>時間割</button>
           </span>
+          <CalendarPicker onChange={cal.reload} />
           <button className="btn btn-small" onClick={() => onEdit({ date })}>＋ 予定を追加</button>
         </span>
       </div>

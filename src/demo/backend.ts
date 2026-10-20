@@ -18,7 +18,7 @@ import { seedCalendar, seedData, DEMO_USER } from './seed';
 declare const initSqlJs: (opts?: unknown) => Promise<any>;
 
 const DB_KEY = 'fj.demo.db.v3';
-const CAL_KEY = 'fj.demo.cal.v1';
+const CAL_KEY = 'fj.demo.cal.v2';
 
 const store = {
   get(k: string) {
@@ -91,6 +91,7 @@ function d1(db: any, onWrite: () => void): D1Database {
 export function resetDemo() {
   store.del(DB_KEY);
   store.del(CAL_KEY);
+  store.del('fj.demo.calsel.v1');
   for (const k of Object.keys(localStorage)) if (k.startsWith('fj.draft.')) store.del(k);
 }
 
@@ -143,7 +144,12 @@ export async function startDemo() {
   const calendars = [
     { id: 'primary', summary: '個人', color: '#3d6a4d', primary: true, writable: true },
     { id: 'yusando', summary: '悠三堂', color: '#a9853a', primary: false, writable: true },
+    { id: 'events', summary: 'YUSANDO EVENTS', color: '#8a5a9e', primary: false, writable: true },
+    { id: 'holidays', summary: '日本の祝日', color: '#c0504d', primary: false, writable: false },
   ];
+  // デモでも「表示するカレンダー」を選べるように、選んだものをこのブラウザに覚える
+  const SEL_KEY = 'fj.demo.calsel.v1';
+  let selected: string[] = JSON.parse(store.get(SEL_KEY) ?? 'null') ?? ['primary', 'yusando'];
   const toEvent = (b: any, base: any = {}) => {
     const allDay = !!b.allDay;
     const end = b.endDate && b.endDate >= b.date ? b.endDate : b.date;
@@ -174,7 +180,7 @@ export async function startDemo() {
     const to = c.req.query('to') ?? from;
     const s = `${from}T00:00:00+09:00`;
     const e = `${addDays(to, 1)}T00:00:00+09:00`;
-    const hit = events.filter((ev) => (ev.allDay ? ev.start <= to && ev.end > from : ev.start < e && ev.end > s));
+    const hit = events.filter((ev) => selected.includes(ev.calendarId ?? 'primary')).filter((ev) => (ev.allDay ? ev.start <= to && ev.end > from : ev.start < e && ev.end > s));
     const out = hit
       .map((ev) => {
         const cal = calendars.find((x) => x.id === ev.calendarId) ?? calendars[0];
@@ -185,7 +191,7 @@ export async function startDemo() {
   });
   app.post('/api/calendar/events', async (c) => {
     const b = await c.req.json();
-    const ev = toEvent(b, { id: crypto.randomUUID(), calendarId: b.calendarId === 'yusando' ? 'yusando' : 'primary' });
+    const ev = toEvent(b, { id: crypto.randomUUID(), calendarId: calendars.some((x) => x.id === b.calendarId && x.writable) ? b.calendarId : 'primary' });
     events.push(ev);
     saveCal();
     return c.json(ev);
@@ -203,8 +209,17 @@ export async function startDemo() {
     return c.json({ ok: true });
   });
   app.get('/api/me', (c) =>
-    c.json({ user: DEMO_USER, settings: { calendarIds: ['primary', 'yusando'], missedCutoff: 'midnight' }, googleConnected: true, notionEnabled: false, demo: true }),
+    c.json({ user: DEMO_USER, settings: { calendarIds: selected, missedCutoff: 'midnight' }, googleConnected: true, notionEnabled: false, demo: true }),
   );
+  app.put('/api/settings', async (c) => {
+    const b = await c.req.json();
+    if (Array.isArray(b.calendarIds)) {
+      selected = b.calendarIds.filter((x: unknown) => calendars.some((k) => k.id === x));
+      if (!selected.length) selected = ['primary'];
+      store.set(SEL_KEY, JSON.stringify(selected));
+    }
+    return c.json({ ok: true });
+  });
   app.route('/api', termRoutes);
   app.route('/api', dayRoutes);
   app.route('/api', integrationRoutes);
