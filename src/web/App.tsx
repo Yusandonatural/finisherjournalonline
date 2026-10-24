@@ -5,6 +5,7 @@ import { api } from './api';
 import { Layout } from './components/Layout';
 import { Loading } from './components/ui';
 import { DayPage } from './pages/DayPage';
+import { FeedPage } from './pages/FeedPage';
 import { GoalsPage } from './pages/GoalsPage';
 import { LifePage } from './pages/LifePage';
 import { LockinPage } from './pages/LockinPage';
@@ -43,6 +44,7 @@ export function App() {
         <Route index element={<Navigate to="/today" replace />} />
         <Route path="today" element={<Navigate to={`/day/${todayJST()}`} replace />} />
         <Route path="day/:date" element={<DayPage />} />
+        <Route path="feed" element={<FeedPage />} />
         <Route path="week" element={<Navigate to={`/week/${mondayOf(todayJST())}`} replace />} />
         <Route path="week/:start" element={<WeekPage tab="plan" />} />
         <Route path="week/:start/review" element={<WeekPage tab="review" />} />

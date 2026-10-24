@@ -8,6 +8,7 @@ import { fillRate, goalsWithProgress, groupByGoal, tasksInRange, termForDate, wi
 import { createTask, markMissed, nextMightPosition, nextPosition } from '../tasks';
 import { lifeSummary } from './life';
 import { lockinForDay, writeRuleLog } from './lockin';
+import { photoInfo } from './feed';
 import { parseEvent } from '../../shared/lockin';
 
 export const dayRoutes = new Hono<AppEnv>();
@@ -47,7 +48,9 @@ dayRoutes.get('/days/:date', async (c) => {
       memo: entry?.memo ?? '',
       goods: parseGoods(entry?.goods_json),
       completed: !!entry?.completed,
+      favorite: !!entry?.favorite,
     },
+    photo: await photoInfo(c.env.DB, u.id, date),
     tasks,
     might: await tasksInRange(c.env.DB, u.id, date, date, 'might'),
     life: await lifeSummary(c.env.DB, u.id),
@@ -69,6 +72,7 @@ dayRoutes.on(['PUT', 'POST'], '/days/:date', async (c) => {
   if ('memo' in b) f.memo = str(b.memo, 20000);
   if ('goods' in b && Array.isArray(b.goods)) f.goods_json = JSON.stringify([0, 1, 2].map((i) => str(b.goods[i], 300)));
   if ('completed' in b) f.completed = b.completed ? 1 : 0;
+  if ('favorite' in b) f.favorite = b.favorite ? 1 : 0;
   // ロックイン：イベントの日の例外モードと、その日の進み具合
   if ('event_day' in b) f.event_day = b.event_day ? 1 : 0;
   if ('progress_metric' in b) f.progress_metric = str(b.progress_metric, 300);

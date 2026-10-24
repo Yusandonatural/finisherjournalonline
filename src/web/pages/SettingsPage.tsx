@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { api, post, put } from '../api';
 import { ErrorBox, Loading } from '../components/ui';
 import { useApi } from '../hooks';
+import { applyStyle, useUiStyle, type UiStyle } from '../style';
 
 export function SettingsPage() {
   const demo = !!(window as any).__FJ_DEMO;
@@ -14,6 +15,7 @@ export function SettingsPage() {
   const [calErr, setCalErr] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
   const [syncMsg, setSyncMsg] = useState<string | null>(null);
+  const uiStyle = useUiStyle();
 
   useEffect(() => {
     api('/calendar/calendars').then(setCals).catch((e) => setCalErr(e.message));
@@ -66,6 +68,30 @@ export function SettingsPage() {
         <h2 className="card-title">アカウント</h2>
         <p>{me.data.user.name} <span className="muted">（{me.data.user.email}）</span></p>
         {demo ? <p className="muted small">デモ版のためログアウトはありません。</p> : <button className="btn" onClick={async () => { await post('/logout'); location.href = '/login'; }}>ログアウト</button>}
+      </section>
+
+      <section className="card">
+        <h2 className="card-title">画面のスタイル</h2>
+        <div className="style-choice" role="radiogroup" aria-label="画面のスタイル">
+          {([
+            ['note', 'ノート', '和紙と明朝体の、手帳のような画面'],
+            ['sns', 'SNS風', 'Instagram・Facebook のような画面。目標が上に丸で並び、日々の記録がフィードで流れます'],
+          ] as [UiStyle, string, string][]).map(([v, label, desc]) => (
+            <label key={v} className={`style-option ${v} ${uiStyle === v ? 'active' : ''}`}>
+              <input
+                type="radio"
+                name="ui-style"
+                checked={uiStyle === v}
+                onChange={async () => {
+                  applyStyle(v);
+                  await put('/settings', { uiStyle: v }).catch(() => {});
+                }}
+              />
+              <span className="style-swatch" aria-hidden="true" />
+              <span><strong>{label}</strong><span className="muted small">{desc}</span></span>
+            </label>
+          ))}
+        </div>
       </section>
 
       <section className="card">

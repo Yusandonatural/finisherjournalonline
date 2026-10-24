@@ -197,3 +197,63 @@ export function seedCalendar() {
   out.push({ id: `e${n++}`, calendarId: 'primary', summary: 'サッカー（子ども）', description: '', location: '', allDay: false, start: t(addDays(today, 5), '09:00'), end: t(addDays(today, 5), '12:00') });
   return out;
 }
+
+/** デモ用の「今日の1枚」：茶畑や茶碗をキャンバスで描いた絵（実際の写真の代わり） */
+export function seedPhotos(run: Run) {
+  if (typeof document === 'undefined') return;
+  const today = todayJST();
+  const scenes: [number, string[], string][] = [
+    [-1, ['#ffd9a0', '#ff9a76', '#3f7d4e', '#2d5e3a'], 'field'],
+    [-2, ['#bfe3ff', '#e9f6ff', '#5c9a5a', '#3d7442'], 'field'],
+    [-4, ['#f3e7d3', '#e7d3b5', '#7a4e2d', '#3f6b45'], 'cup'],
+    [-5, ['#2b2d6b', '#d76d77', '#2e4d3a', '#1d3326'], 'field'],
+    [-7, ['#e9f1e4', '#cfe3c6', '#6f8f4e', '#3f6b45'], 'cup'],
+    [-9, ['#ffe7b3', '#ffc36b', '#4f8a4b', '#2f6b3c'], 'field'],
+  ];
+  for (const [off, c, kind] of scenes) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 720;
+    canvas.height = 720;
+    const g = canvas.getContext('2d');
+    if (!g) return;
+    const sky = g.createLinearGradient(0, 0, 0, 720);
+    sky.addColorStop(0, c[0]);
+    sky.addColorStop(1, c[1]);
+    g.fillStyle = sky;
+    g.fillRect(0, 0, 720, 720);
+    if (kind === 'field') {
+      g.fillStyle = 'rgba(255,255,255,.75)';
+      g.beginPath();
+      g.arc(540, 190, 70, 0, Math.PI * 2);
+      g.fill();
+      for (let i = 0; i < 7; i++) {
+        const y = 330 + i * 60;
+        g.fillStyle = i % 2 ? c[2] : c[3];
+        g.beginPath();
+        g.moveTo(0, y + 40);
+        g.bezierCurveTo(200, y - 30, 520, y + 60, 720, y);
+        g.lineTo(720, 720);
+        g.lineTo(0, 720);
+        g.fill();
+      }
+    } else {
+      g.fillStyle = c[3];
+      g.beginPath();
+      g.ellipse(360, 420, 230, 90, 0, 0, Math.PI * 2);
+      g.fill();
+      g.fillStyle = c[2];
+      g.beginPath();
+      g.ellipse(360, 380, 170, 150, 0, 0, Math.PI);
+      g.fill();
+      g.fillStyle = '#9dbb5c';
+      g.beginPath();
+      g.ellipse(360, 382, 150, 42, 0, 0, Math.PI * 2);
+      g.fill();
+    }
+    const url = canvas.toDataURL('image/jpeg', 0.7);
+    run('INSERT INTO day_photos (user_id, date, mime, data, width, height) VALUES (?, ?, ?, ?, 720, 720)', [DEMO_USER.id, addDays(today, off), 'image/jpeg', url.slice(url.indexOf(',') + 1)]);
+  }
+  for (const off of [-1, -4, -9]) run('UPDATE daily_entries SET favorite = 1 WHERE user_id = ? AND date = ?', [DEMO_USER.id, addDays(today, off)]);
+  run('UPDATE daily_entries SET memo = ? WHERE user_id = ? AND date = ?', ['夕方の茶畑。今日はロックインを全部守れた。', DEMO_USER.id, addDays(today, -1)]);
+  run('UPDATE daily_entries SET memo = ? WHERE user_id = ? AND date = ?', ['新しい茶碗で一服。内装の打ち合わせも前に進んだ。', DEMO_USER.id, addDays(today, -4)]);
+}

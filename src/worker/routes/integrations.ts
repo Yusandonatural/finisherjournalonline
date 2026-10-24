@@ -17,7 +17,7 @@ async function settings(db: D1Database, userId: string) {
   try {
     calendarIds = JSON.parse(s.calendar_ids_json);
   } catch {}
-  return { calendarIds, missedCutoff: s.missed_cutoff as string };
+  return { calendarIds, missedCutoff: s.missed_cutoff as string, uiStyle: (s.ui_style ?? 'note') as string };
 }
 
 integrationRoutes.get('/me', async (c) => {
@@ -38,6 +38,9 @@ integrationRoutes.put('/settings', async (c) => {
   if (Array.isArray(b.calendarIds)) {
     const ids = b.calendarIds.filter((x: unknown) => typeof x === 'string').slice(0, 20);
     await run(c.env.DB, 'UPDATE user_settings SET calendar_ids_json = ? WHERE user_id = ?', JSON.stringify(ids.length ? ids : ['primary']), u.id);
+  }
+  if (['note', 'sns'].includes(b.uiStyle)) {
+    await run(c.env.DB, 'UPDATE user_settings SET ui_style = ? WHERE user_id = ?', b.uiStyle, u.id);
   }
   if (['midnight', 'noon'].includes(b.missedCutoff)) {
     await run(c.env.DB, 'UPDATE user_settings SET missed_cutoff = ? WHERE user_id = ?', b.missedCutoff, u.id);

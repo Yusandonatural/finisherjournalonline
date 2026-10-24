@@ -475,3 +475,18 @@ sync_state       (key, value)                                -- Notion 取り込
 
 - DB: `migrations/0005_lockin.sql`（terms に lockin ほか、lockin_rules・lockin_logs、daily_entries に event_day・event_json・progress_metric）
 - API: `GET/PUT /api/terms/:id/lockin`、`POST /api/terms/:id/lockin/rules`、`PATCH/DELETE /api/lockin/rules/:id`、`PUT /api/days/:date/lockin/:ruleId`（value・add・done）。`GET /api/days/:date` に `lockin` を追加
+
+## 16. SNS風の画面（v0.8）
+
+設定 → 「画面のスタイル」で、ノート風（今まで）と SNS風を切り替える。選んだものはアカウントに保存し、端末にも覚えて最初の表示から反映する。
+
+| 機能 | 中身 |
+|---|---|
+| 見た目 | 白い画面・ゴシック体・角丸の入力欄・アイコンだけの下のタブ（設定は右上の歯車）。ダークモード対応 |
+| ストーリーズ | 今日のページの上に、人生・90日の目標（進み具合のリング）・ロックイン・習慣を丸で並べる。押すと全画面で1つずつ（7秒で次へ、左右タップで前後、長押しで止まる）。マイルストーンと習慣はその場でチェックできる |
+| フィード | 「フィード」タブ。プロフィール（記録した日・写真・お気に入りの数、人生のビジョン）の下に、日々の記録を投稿のように新しい順に。下まで来ると続きを読む。♡（写真はダブルタップ）でお気に入り |
+| 写真のグリッド | フィードの右のタブ。3列の写真一覧から、その日のページへ |
+| 今日の1枚 | 1日1枚の写真。スマホ側で長辺1080pxのJPEGに縮めてから保存（D1、base64）。ノート風でも使える |
+
+- DB: `migrations/0006_sns.sql`（user_settings.ui_style、daily_entries.favorite、day_photos）
+- API: `GET /api/feed?before=`、`GET /api/profile`、`GET/PUT/DELETE /api/photos/:date`、`PUT /api/days/:date` に `favorite`、`PUT /api/settings` に `uiStyle`

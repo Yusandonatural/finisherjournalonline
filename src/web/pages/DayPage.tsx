@@ -5,6 +5,9 @@ import { put } from '../api';
 import { CalendarError, CalendarPicker, DayTimeline, EventLine, EventModal, eventsOn, useEvents, type CalEvent } from '../components/calendar';
 import { GoalPanel, GoalStrip } from '../components/GoalPanel';
 import { LockinCard } from '../components/LockinCard';
+import { DayPhotoCard } from '../components/Photo';
+import { StoriesBar } from '../components/Stories';
+import { useUiStyle } from '../style';
 import { NotionPicker } from '../components/NotionPicker';
 import { EmptyTaskSlot, MightList, TaskRow, type Task } from '../components/TaskRow';
 import { ErrorBox, Loading, SaveBadge, pct } from '../components/ui';
@@ -17,6 +20,7 @@ export function DayPage() {
 
 function DayView({ date }: { date: string }) {
   const nav = useNavigate();
+  const sns = useUiStyle() === 'sns';
   const { data, error, reload, setData } = useApi<any>(`/days/${date}`);
   const [goalsOpen, setGoalsOpen] = useLocalFlag('fj.goalsOpen', true);
   const [picker, setPicker] = useState(false);
@@ -127,15 +131,29 @@ function DayView({ date }: { date: string }) {
         </aside>
 
         <div className="day-main">
-          <GoalStrip
-            goals={data.goals}
-            termId={term?.id}
-            date={date}
-            elapsedPct={info?.phase === 'active' ? info.elapsedPct : undefined}
-            vision={data.life?.vision}
-            onChange={() => { setData({ ...data }); reload(); }}
-            editable={!!term?.inTerm}
-          />
+          {sns ? (
+            <StoriesBar
+              date={date}
+              goals={data.goals}
+              life={data.life}
+              lockin={data.lockin}
+              termId={term?.id}
+              dayNumber={info?.dayNumber}
+              editable={!!term?.inTerm}
+              onChange={() => { setData({ ...data }); reload(); }}
+            />
+          ) : (
+            <GoalStrip
+              goals={data.goals}
+              termId={term?.id}
+              date={date}
+              elapsedPct={info?.phase === 'active' ? info.elapsedPct : undefined}
+              vision={data.life?.vision}
+              onChange={() => { setData({ ...data }); reload(); }}
+              editable={!!term?.inTerm}
+            />
+          )}
+          {sns && <DayPhotoCard date={date} photo={data.photo} onChange={(photo) => setData({ ...data, photo })} />}
           {data.lockin && term && (
             <LockinCard
               date={date}
@@ -216,6 +234,8 @@ function DayView({ date }: { date: string }) {
             </ol>
             {form.goods.every((g) => g.trim()) && <p className="celebrate">3つそろいました。いい一日でしたね。</p>}
           </section>
+
+          {!sns && <DayPhotoCard date={date} photo={data.photo} onChange={(photo) => setData({ ...data, photo })} />}
 
           <section className="card">
             <h2 className="card-title">一言日記</h2>

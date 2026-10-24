@@ -7,17 +7,19 @@ import { dayRoutes } from '../worker/routes/days';
 import { integrationRoutes } from '../worker/routes/integrations';
 import { lifeRoutes } from '../worker/routes/life';
 import { lockinRoutes } from '../worker/routes/lockin';
+import { feedRoutes } from '../worker/routes/feed';
 import { termRoutes } from '../worker/routes/terms';
 import m1 from '../../migrations/0001_init.sql?raw';
 import m2 from '../../migrations/0002_metrics_obstacle_might.sql?raw';
 import m3 from '../../migrations/0003_life_goals.sql?raw';
 import m4 from '../../migrations/0004_lang_link.sql?raw';
 import m5 from '../../migrations/0005_lockin.sql?raw';
-import { seedCalendar, seedData, DEMO_USER } from './seed';
+import m6 from '../../migrations/0006_sns.sql?raw';
+import { seedCalendar, seedData, seedPhotos, DEMO_USER } from './seed';
 
 declare const initSqlJs: (opts?: unknown) => Promise<any>;
 
-const DB_KEY = 'fj.demo.db.v3';
+const DB_KEY = 'fj.demo.db.v4';
 const CAL_KEY = 'fj.demo.cal.v2';
 
 const store = {
@@ -92,10 +94,12 @@ export function resetDemo() {
   store.del(DB_KEY);
   store.del(CAL_KEY);
   store.del('fj.demo.calsel.v1');
+  store.del('fj.demo.uistyle.v1');
   for (const k of Object.keys(localStorage)) if (k.startsWith('fj.draft.')) store.del(k);
 }
 
 export async function startDemo() {
+  for (const k of ['fj.demo.db.v2', 'fj.demo.db.v3']) store.del(k); // 古い版のデモデータは消す
   const SQL = await initSqlJs();
   const saved = store.get(DB_KEY);
   let db: any;
@@ -104,6 +108,7 @@ export async function startDemo() {
       db = new SQL.Database(Uint8Array.from(atob(saved), (c) => c.charCodeAt(0)));
       try { db.exec(m4); } catch { /* 追加済み */ }
       try { db.exec(m5); } catch { /* 追加済み */ }
+      try { db.exec(m6); } catch { /* 追加済み */ }
     } catch {
       db = null;
     }
@@ -115,8 +120,10 @@ export async function startDemo() {
     db.exec(m3);
     db.exec(m4);
     db.exec(m5);
+    db.exec(m6);
     db.exec('BEGIN');
     seedData((sql: string, p: unknown[] = []) => db.run(sql, p.map(norm)));
+    seedPhotos((sql: string, p: unknown[] = []) => db.run(sql, p.map(norm)));
     db.exec('COMMIT');
     store.set(DB_KEY, toB64(db.export()));
   }
@@ -150,6 +157,8 @@ export async function startDemo() {
   // デモでも「表示するカレンダー」を選べるように、選んだものをこのブラウザに覚える
   const SEL_KEY = 'fj.demo.calsel.v1';
   let selected: string[] = JSON.parse(store.get(SEL_KEY) ?? 'null') ?? ['primary', 'yusando'];
+  const STYLE_KEY = 'fj.demo.uistyle.v1';
+  let uiStyle = store.get(STYLE_KEY) === 'sns' ? 'sns' : 'note';
   const toEvent = (b: any, base: any = {}) => {
     const allDay = !!b.allDay;
     const end = b.endDate && b.endDate >= b.date ? b.endDate : b.date;
@@ -209,7 +218,7 @@ export async function startDemo() {
     return c.json({ ok: true });
   });
   app.get('/api/me', (c) =>
-    c.json({ user: DEMO_USER, settings: { calendarIds: selected, missedCutoff: 'midnight' }, googleConnected: true, notionEnabled: false, demo: true }),
+    c.json({ user: DEMO_USER, settings: { calendarIds: selected, missedCutoff: 'midnight', uiStyle }, googleConnected: true, notionEnabled: false, demo: true }),
   );
   app.put('/api/settings', async (c) => {
     const b = await c.req.json();
@@ -218,6 +227,10 @@ export async function startDemo() {
       if (!selected.length) selected = ['primary'];
       store.set(SEL_KEY, JSON.stringify(selected));
     }
+    if (b.uiStyle === 'sns' || b.uiStyle === 'note') {
+      uiStyle = b.uiStyle;
+      store.set(STYLE_KEY, uiStyle);
+    }
     return c.json({ ok: true });
   });
   app.route('/api', termRoutes);
@@ -225,6 +238,7 @@ export async function startDemo() {
   app.route('/api', integrationRoutes);
   app.route('/api', lifeRoutes);
   app.route('/api', lockinRoutes);
+  app.route('/api', feedRoutes);
 
   const ctx = { waitUntil: (p: Promise<unknown>) => void p.catch(() => {}), passThroughOnException() {}, props: {} };
   const origFetch = window.fetch.bind(window);

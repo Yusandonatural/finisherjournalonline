@@ -5,6 +5,9 @@ import { App } from '../web/App';
 import '../web/styles.css';
 import './demo.css';
 import { resetDemo, startDemo } from './backend';
+import { initStyle } from '../web/style';
+
+initStyle();
 
 (window as any).__FJ_DEMO = true;
 
