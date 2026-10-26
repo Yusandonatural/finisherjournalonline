@@ -88,7 +88,7 @@ export function DayPhotoCard({ date, photo, onChange }: { date: string; photo: P
   }
 
   return (
-    <section className="card photo-card no-swipe">
+    <section className={`card photo-card no-swipe ${photo ? '' : 'empty'}`}>
       <div className="card-head">
         <h2 className="card-title">今日の1枚</h2>
         {photo && (
@@ -115,9 +115,11 @@ export function DayPhotoCard({ date, photo, onChange }: { date: string; photo: P
         </div>
       ) : (
         <button type="button" className="photo-drop" disabled={busy} onClick={() => input.current?.click()}>
-          <IconCamera size={28} />
-          <span>{busy ? '保存中…' : '写真を追加'}</span>
-          <span className="muted small">今日を思い出せる1枚を。フィードに並びます</span>
+          <span className="photo-drop-icon"><IconCamera size={22} /></span>
+          <span className="photo-drop-text">
+            <strong>{busy ? '保存中…' : '写真を追加'}</strong>
+            <span className="muted small">今日を思い出せる1枚を。フィードに並びます</span>
+          </span>
         </button>
       )}
       <input ref={input} type="file" accept="image/*" hidden onChange={(e) => pick(e.target.files?.[0])} />

@@ -957,3 +957,22 @@ input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline
 .style-swatch { flex: none; width: 44px; height: 44px; border-radius: 10px; border: 1px solid var(--line); }
 .style-option.note .style-swatch { background: linear-gradient(135deg, #f4efe4 50%, #2f5d43 50%); }
 .style-option.sns .style-swatch { background: var(--ig, linear-gradient(45deg, #feda75, #fa7e1e, #d62976, #962fbf, #4f5bd5)); border-radius: 50%; }
+
+/* 見直し：カードの見出し横のボタンは、入りきらなければ次の行へ */
+.head-actions { flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+.head-actions .seg { flex-wrap: nowrap; }
+.seg button { white-space: nowrap; }
+
+/* 見直し：ストーリーズは今日のページのいちばん上に */
+[data-style='sns'] .day-page > .stories { margin: -4px 0 0; padding-bottom: 6px; border-bottom: 1px solid var(--line); }
+@media (max-width: 760px) {
+  [data-style='sns'] .day-page > .stories { margin: -14px -12px 0; padding: 12px 12px 10px; }
+}
+
+/* 見直し：写真がまだない日は、1行の小さなボタンに */
+.photo-card.empty { padding: 10px; }
+.photo-card.empty .card-head { display: none; }
+.photo-drop { flex-direction: row; justify-content: flex-start; gap: 12px; padding: 10px 12px; text-align: left; border-width: 1px; }
+.photo-drop-icon { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: var(--surface); color: var(--ink); }
+[data-style='sns'] .photo-drop-icon { background: var(--ig); color: #fff; }
+.photo-drop-text { display: flex; flex-direction: column; line-height: 1.4; min-width: 0; }

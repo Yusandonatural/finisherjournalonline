@@ -82,6 +82,18 @@ function DayView({ date }: { date: string }) {
         if (Math.abs(dx) > 90) nav(`/day/${addDays(date, dx > 0 ? -1 : 1)}`);
       }}
     >
+      {sns && (
+        <StoriesBar
+          date={date}
+          goals={data.goals}
+          life={data.life}
+          lockin={data.lockin}
+          termId={term?.id}
+          dayNumber={info?.dayNumber}
+          editable={!!term?.inTerm}
+          onChange={() => { setData({ ...data }); reload(); }}
+        />
+      )}
       <header className="day-header">
         <Link className="icon-btn" to={`/day/${addDays(date, -1)}`} aria-label="前の日">‹</Link>
         <div className="day-heading">
@@ -112,7 +124,7 @@ function DayView({ date }: { date: string }) {
           <section className="card timeline-card desktop-only no-swipe">
             <div className="card-head">
               <h2 className="card-title">1日の予定</h2>
-              <span className="row">
+              <span className="row head-actions">
                 <CalendarPicker onChange={cal.reload} />
                 <button className="btn btn-small" onClick={() => setEditEvent({ date })}>＋ 追加</button>
               </span>
@@ -131,18 +143,7 @@ function DayView({ date }: { date: string }) {
         </aside>
 
         <div className="day-main">
-          {sns ? (
-            <StoriesBar
-              date={date}
-              goals={data.goals}
-              life={data.life}
-              lockin={data.lockin}
-              termId={term?.id}
-              dayNumber={info?.dayNumber}
-              editable={!!term?.inTerm}
-              onChange={() => { setData({ ...data }); reload(); }}
-            />
-          ) : (
+          {!sns && (
             <GoalStrip
               goals={data.goals}
               termId={term?.id}
@@ -271,13 +272,13 @@ function ScheduleCard({ date, today, cal, onEdit }: {
     <section className="card no-swipe">
       <div className="card-head">
         <h2 className="card-title">今日のスケジュール</h2>
-        <span className="row">
+        <span className="row head-actions">
           <span className="seg mobile-only" role="group" aria-label="表示">
             <button type="button" className={timeline ? '' : 'active'} onClick={() => setTimeline(false)}>リスト</button>
             <button type="button" className={timeline ? 'active' : ''} onClick={() => setTimeline(true)}>時間割</button>
           </span>
           <CalendarPicker onChange={cal.reload} />
-          <button className="btn btn-small" onClick={() => onEdit({ date })}>＋ 予定を追加</button>
+          <button className="btn btn-small" onClick={() => onEdit({ date })} aria-label="予定を追加">＋ 追加</button>
         </span>
       </div>
       {error && <CalendarError message={error} />}
