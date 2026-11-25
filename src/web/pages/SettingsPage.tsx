@@ -70,6 +70,8 @@ export function SettingsPage() {
         {demo ? <p className="muted small">デモ版のためログアウトはありません。</p> : <button className="btn" onClick={async () => { await post('/logout'); location.href = '/login'; }}>ログアウト</button>}
       </section>
 
+      <InstallCard />
+
       <section className="card">
         <h2 className="card-title">画面のスタイル</h2>
         <div className="style-choice" role="radiogroup" aria-label="画面のスタイル">
@@ -197,5 +199,64 @@ export function SettingsPage() {
         )}
       </section>
     </div>
+  );
+}
+
+/** ホーム画面に追加して、アプリとして使う */
+function InstallCard() {
+  const [prompt, setPrompt] = useState<any>(null);
+  const [done, setDone] = useState(false);
+  const standalone = typeof window !== 'undefined' && (window.matchMedia?.('(display-mode: standalone)').matches || (navigator as any).standalone === true);
+  const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+  useEffect(() => {
+    const onPrompt = (e: Event) => {
+      e.preventDefault();
+      setPrompt(e);
+    };
+    const onInstalled = () => setDone(true);
+    window.addEventListener('beforeinstallprompt', onPrompt);
+    window.addEventListener('appinstalled', onInstalled);
+    return () => {
+      window.removeEventListener('beforeinstallprompt', onPrompt);
+      window.removeEventListener('appinstalled', onInstalled);
+    };
+  }, []);
+
+  return (
+    <section className="card install-card">
+      <h2 className="card-title">アプリとして使う</h2>
+      {standalone || done ? (
+        <p className="muted small">アプリとして開いています。ホーム画面のアイコンから、いつでも全画面で開けます。</p>
+      ) : (
+        <>
+          <p className="muted small">ホーム画面に置くと、アプリのように全画面で開けます。インストールは不要で、更新も自動です。</p>
+          {prompt ? (
+            <button
+              className="btn btn-primary"
+              onClick={async () => {
+                prompt.prompt();
+                const r = await prompt.userChoice.catch(() => null);
+                if (r?.outcome === 'accepted') setDone(true);
+                setPrompt(null);
+              }}
+            >
+              ホーム画面に追加
+            </button>
+          ) : ios ? (
+            <ol className="install-steps">
+              <li>Safari の下にある共有ボタン（四角から矢印が出ている形）を押す</li>
+              <li>「ホーム画面に追加」を選ぶ</li>
+              <li>右上の「追加」を押す</li>
+            </ol>
+          ) : (
+            <ol className="install-steps">
+              <li>Android の Chrome：右上の「︙」→「アプリをインストール」（または「ホーム画面に追加」）</li>
+              <li>パソコンの Chrome・Edge：アドレスバーの右にあるインストールのアイコンを押す</li>
+            </ol>
+          )}
+        </>
+      )}
+    </section>
   );
 }

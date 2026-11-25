@@ -976,3 +976,6 @@ input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline
 .photo-drop-icon { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: var(--surface); color: var(--ink); }
 [data-style='sns'] .photo-drop-icon { background: var(--ig); color: #fff; }
 .photo-drop-text { display: flex; flex-direction: column; line-height: 1.4; min-width: 0; }
+
+/* 設定：アプリとして使う */
+.install-steps { margin: 6px 0 0; padding-left: 1.4em; line-height: 1.8; font-size: 14px; }
